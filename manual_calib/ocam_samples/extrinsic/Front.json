@@ -1,0 +1,32 @@
+{
+    "bev-to-front_camera-extrinsic": {
+        "sensor_name": "camera",
+        "target_sensor_name": "car",
+        "device_type": "relational",
+        "param_type": "extrinsic",
+        "param": {
+            "time_lag": 0,
+            "sensor_calib": {
+                "rows": 4,
+                "cols": 4,
+                "type": 6,
+                "continuous": true,
+                "data": [
+                    [
+                        0.999085,-0.0135843,0.0405562,-0.0894446
+                    ],
+                    [
+                        -0.029225,0.475523,0.879219,-3.47728
+                    ],
+                    [
+                        -0.0312289,-0.879599,0.47469,0.202052
+                    ],
+                    [
+                        0,0,0,1
+                  
+                    ]
+                ]
+            }
+        }
+    }
+}

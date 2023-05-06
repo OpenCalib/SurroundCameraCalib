@@ -1,0 +1,34 @@
+{
+    "bev-to-right_camera-extrinsic": {
+        "sensor_name": "right_camera",
+        "target_sensor_name": "car",
+        "device_type": "relational",
+        "param_type": "extrinsic",
+        "param": {
+            "time_lag": 0,
+            "sensor_calib": {
+                "rows": 4,
+                "cols": 4,
+                "type": 6,
+                "continuous": true,
+                "data": [
+                    [
+                        -0.0174585,0.999771,0.012411,-0.927352
+                    ],
+                    [
+                        -0.482771,-0.0192991,0.875534,-3.20051
+                    ],
+                    [
+                        0.875573,0.0092938,0.482997,-0.859384
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                ]
+            }
+        }
+    }
+}

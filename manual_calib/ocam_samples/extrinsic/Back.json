@@ -1,0 +1,34 @@
+{
+    "bev-to-back_camera-extrinsic": {
+        "sensor_name": "back_camera",
+        "target_sensor_name": "car",
+        "device_type": "relational",
+        "param_type": "extrinsic",
+        "param": {
+            "time_lag": 0,
+            "sensor_calib": {
+                "rows": 4,
+                "cols": 4,
+                "type": 6,
+                "continuous": true,
+                "data": [
+                    [
+                        -0.99999,-0.0043425,-0.00138107,0.196313
+                    ],
+                    [
+                        0.00111165,-0.526402,0.850235,-5.58338
+                    ],
+                    [
+                        -0.00441911,0.850225,0.526402,0.158107
+                    ],
+                    [
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                ]
+            }
+        }
+    }
+}
