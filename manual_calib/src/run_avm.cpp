@@ -389,13 +389,9 @@ int main(int argc, char **argv) {
 	double dX = 0.004;
 	double dY = 0.004;
 	cv::Mat K_G = cv::Mat::zeros(3,3,CV_64FC1);
-  if(camera_model==1){
-    K_G.at<double>(0,0) = -1/dX;
-	  K_G.at<double>(1,1) = -1/dY;
-  }else{
-    K_G.at<double>(0,0) = 1/dX;
-	  K_G.at<double>(1,1) = 1/dY;
-  }
+
+  K_G.at<double>(0,0) = 1/dX;
+	K_G.at<double>(1,1) = 1/dY;
 	K_G.at<double>(0,2) = cols/2;
 	K_G.at<double>(1,2) = rows/2;
 	K_G.at<double>(2,2) =   1.0;
@@ -410,7 +406,7 @@ int main(int argc, char **argv) {
   //height for pinhole-samples
   vector<float> bev2ground(4,5.1);
   //height for ocam-samples
-  //vector<float> bev2ground{2.41159,2.6,3.83188,2.6};
+  //vector<float> bev2ground{6.07826,6.25217,6.31014,6.28116};
   vector<cv::Mat> imgs_G(4);
   for(int i=0;i<4;i++){
     imgs_G[i]=project_on_ground(imgs[i],json_param[i],K[i],dist[i],K_G,rows,cols,camera_model,bev2ground[i]);
