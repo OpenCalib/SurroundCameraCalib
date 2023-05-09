@@ -42,6 +42,7 @@ public:
     void findcontours();
     std::vector<std::vector<cv::Point>> fillContour(const std::vector<std::vector<cv::Point>> & _contours);
     Mat extrac_textures_and_save(string filename);
+    vector<cv::Point> extrac_textures();
     static bool cmpx(Point p1, Point p2){ 
         return p1.x < p2.x;
     };

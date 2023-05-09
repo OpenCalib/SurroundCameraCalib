@@ -168,19 +168,20 @@ void CameraOptimization(Optimizer &opt,string cameraType){
 
     cout<<"**************************************3rd****************************************"<<endl;
     int thread_num__=3;
+    int ite_num = 4000;
     vector<thread>threads__(thread_num__);
     for(int i=0;i<thread_num__;i++){
         if(cameraType=="right"){
-            threads__[i]=thread(&Optimizer::fine_Calibrate_right,&opt,4000,-0.1,0.1,-0.1,0.1,-0.1,0.1,
+            threads__[i]=thread(&Optimizer::fine_Calibrate_right,&opt,ite_num,-0.1,0.1,-0.1,0.1,-0.1,0.1,
                                         -0.02,0.02,-0.02,0.02,-0.02,0.02);
             
         }
         else if(cameraType=="left"){
-            threads__[i]=thread(&Optimizer::fine_Calibrate_left,&opt,4000,-0.1,0.1,-0.1,0.1,-0.1,0.1,
+            threads__[i]=thread(&Optimizer::fine_Calibrate_left,&opt,ite_num,-0.1,0.1,-0.1,0.1,-0.1,0.1,
                                         -0.02,0.02,-0.02,0.02,-0.02,0.02);
         }
         else if(cameraType=="behind"){
-            threads__[i]=thread(&Optimizer::fine_Calibrate_behind,&opt,4000,-0.1,0.1,-0.1,0.1,-0.1,0.1,
+            threads__[i]=thread(&Optimizer::fine_Calibrate_behind,&opt,ite_num,-0.1,0.1,-0.1,0.1,-0.1,0.1,
                                         -0.02,0.02,-0.02,0.02,-0.02,0.02);
         }
     
@@ -216,16 +217,16 @@ void CameraOptimization(Optimizer &opt,string cameraType){
 }  
 
 int main(){
-    string file="imgs/luminorsity_example/24";
+    //string file="imgs/luminorsity_example/18";
 
     //camera_model:0-fisheye;1-Ocam;2-pinhole
     int camera_model=2;
 
 	//read frames
-    Mat imgf=cv::imread(file+"/samples/Front.png");
-    Mat imgl=cv::imread(file+"/samples/Left.png");
-    Mat imgb=cv::imread(file+"/samples/Back.png");
-    Mat imgr=cv::imread(file+"/samples/Right.png");
+    Mat imgf=cv::imread("imgs/Front.png");
+    Mat imgl=cv::imread("imgs/Left.png");
+    Mat imgb=cv::imread("imgs/Back.png");
+    Mat imgr=cv::imread("imgs/Right.png");
 
     //initilize the optimizer
 	Optimizer opt(&imgf,&imgl,&imgb,&imgr,camera_model,1500,1500);
@@ -244,17 +245,13 @@ int main(){
 
 	Mat bev_before=opt.generate_surround_view(GF,GL,GB,GR);
 	imshow("opt_before",bev_before);
-	//waitKey(0);
-	imwrite("imgs/luminorsity_example/before_all_cameras_calib.png",bev_before);
 
 
 	//texture extraction of front view
 	extractor ext1(GF,GL);
 	ext1.Binarization();
 	ext1.findcontours();
-	Mat texture_fl=ext1.extrac_textures_and_save(file+"/fl_textures.csv");
-    imwrite(file+"/texture_fl.png",texture_fl);
-    opt.fl_pixels_texture_less=opt.readfromcsv(file+"/fl_textures.csv");
+    opt.fl_pixels_texture_less=ext1.extrac_textures();
     Mat pG_fl = Mat::ones(3,opt.fl_pixels_texture_less.size(),CV_64FC1);
     for(int i=0;i<opt.fl_pixels_texture_less.size();i++){
         pG_fl.at<double>(0,i) = opt.fl_pixels_texture_less[i].x;
@@ -268,9 +265,7 @@ int main(){
 	extractor ext2(GF,GR);
 	ext2.Binarization();
 	ext2.findcontours();
-	Mat texture_fr=ext2.extrac_textures_and_save(file+"/fr_textures.csv");
-    imwrite(file+"/texture_fr.png",texture_fr);
-    opt.fr_pixels_texture_less=opt.readfromcsv(file+"/fr_textures.csv");
+    opt.fr_pixels_texture_less=ext2.extrac_textures();
     Mat pG_fr = Mat::ones(3,opt.fr_pixels_texture_less.size(),CV_64FC1);
     for(int i=0;i<opt.fr_pixels_texture_less.size();i++){
         pG_fr.at<double>(0,i) = opt.fr_pixels_texture_less[i].x;
@@ -286,27 +281,22 @@ int main(){
     CameraOptimization(opt,"right");
     Mat GR_opt=opt.project_on_ground(imgr,opt.extrinsic_right_opt,opt.intrinsic_right,opt.distortion_params_right,opt.KG,opt.brows,opt.bcols,opt.hr);
     GR_opt=opt.tail(GR_opt,"r");
-    imwrite(file+"/GR_opt.png",GR_opt);
     
 
     cout<<"*********************************start left**************************************"<<endl;
 
     CameraOptimization(opt,"left");
     Mat GL_opt=opt.project_on_ground(imgl,opt.extrinsic_left_opt,opt.intrinsic_left,opt.distortion_params_left,opt.KG,opt.brows,opt.bcols,opt.hl);
-    GL_opt=opt.tail(GL_opt,"l");
-    imwrite(file+"/GL_opt.png",GL_opt);    
+    GL_opt=opt.tail(GL_opt,"l");   
 
 
     // texture extraction of behind view
-    Mat GL_opt_=imread(file+"/GL_opt.png");
-    opt.imgl_bev_rgb=GL_opt_;
+    opt.imgl_bev_rgb=GL_opt;
     opt.imgl_bev=opt.gray_gamma(opt.imgl_bev_rgb);
-	extractor ext3(GL_opt_,GB);
+	extractor ext3(GL_opt,GB);
 	ext3.Binarization();
 	ext3.findcontours();
-	Mat texture_bl=ext3.extrac_textures_and_save(file+"/bl_textures.csv");
-    imwrite(file+"/texture_bl.png",texture_bl);
-	opt.bl_pixels_texture_less=opt.readfromcsv(file+"/bl_textures.csv");
+	opt.bl_pixels_texture_less=ext3.extrac_textures();
     Mat pG_bl = Mat::ones(3,opt.bl_pixels_texture_less.size(),CV_64FC1);
     for(int i=0;i<opt.bl_pixels_texture_less.size();i++){
         pG_bl.at<double>(0,i) = opt.bl_pixels_texture_less[i].x;
@@ -317,15 +307,12 @@ int main(){
     PG_bl(cv::Rect(0,0,opt.bl_pixels_texture_less.size(),3))=opt.eigen2mat(opt.KG.inverse())*pG_bl*opt.hb; 
     opt.PG_bl=PG_bl;
 
-	Mat GR_opt_=imread(file+"/GR_opt.png");
-    opt.imgr_bev_rgb=GR_opt_;
+    opt.imgr_bev_rgb=GR_opt;
     opt.imgr_bev=opt.gray_gamma(opt.imgr_bev_rgb);
-    extractor ext4(GR_opt_,GB);
+    extractor ext4(GR_opt,GB);
 	ext4.Binarization();
 	ext4.findcontours();
-	Mat texture_br=ext4.extrac_textures_and_save(file+"/br_textures.csv");
-    imwrite(file+"/texture_br.png",texture_br);
-	opt.br_pixels_texture_less=opt.readfromcsv(file+"/br_textures.csv");
+	opt.br_pixels_texture_less=ext4.extrac_textures();
     Mat pG_br = Mat::ones(3,opt.br_pixels_texture_less.size(),CV_64FC1);
     for(int i=0;i<opt.br_pixels_texture_less.size();i++){
         pG_br.at<double>(0,i) = opt.br_pixels_texture_less[i].x;
@@ -339,13 +326,12 @@ int main(){
     cout<<"*********************************start behind**********************************"<<endl;
     CameraOptimization(opt,"behind");
     Mat GB_opt=opt.project_on_ground(imgb,opt.extrinsic_behind_opt,opt.intrinsic_behind,opt.distortion_params_behind,opt.KG,opt.brows,opt.bcols,opt.hb);
-    GB_opt=opt.tail(GB_opt,"b");
-    imwrite(file+"/GB_opt.png",GB_opt);   
+    GB_opt=opt.tail(GB_opt,"b");  
     opt.imgb_bev_rgb=GB_opt;
     opt.imgb_bev=opt.gray_gamma(opt.imgb_bev_rgb);
 
     //save results
-    opt.SaveOptResult("imgs/luminorsity_example/after_all_calib.png");
+    opt.SaveOptResult("imgs/after_all_calib.png");
 
 
 }

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(online_Calibration)
 set(CMAKE_CXX_FLAGS "-std=c++11 -g -Wall")
+SET(CMAKE_BUILD_TYPE "Release")
 
 include_directories("/usr/include/eigen3")
 find_package(OpenCV REQUIRED 
@@ -15,5 +16,5 @@ file(GLOB_RECURSE PARSER_PATH src/*.cpp)
 add_library(${PROJECT_NAME} STATIC ${PARSER_PATH})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
-add_executable(run_online_Calibration src/AVM_online_calibration.cpp)
-target_link_libraries(run_online_Calibration ${PROJECT_NAME})
+add_executable(run_AVM_Calibration src/calibration.cpp)
+target_link_libraries(run_AVM_Calibration ${PROJECT_NAME})

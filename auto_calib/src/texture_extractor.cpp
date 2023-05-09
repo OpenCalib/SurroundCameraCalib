@@ -167,3 +167,35 @@ Mat extractor::extrac_textures_and_save(string filename){
     writetocsv(filename,commonview_down);
     return show;
 }
+
+vector<cv::Point> extractor::extrac_textures(){
+	int down_sample=500;
+    Mat gray1,gray2;
+    cvtColor(img1_bev,gray1,COLOR_BGR2GRAY);
+    GaussianBlur(gray1,gray1,Size(3,3),0);
+    cvtColor(img2_bev,gray2,COLOR_BGR2GRAY);
+    GaussianBlur(gray2,gray2,Size(3,3),0);	
+
+    vector<cv::Point> commonview;
+    vector<Point> contour1_pixels=contours[0];
+    for(auto pixel:contour1_pixels){
+        if ( pixel.x < 10 || pixel.y < 10 || ( pixel.x+10 ) >img1_bev.cols || ( pixel.y+10 ) >img1_bev.rows )
+            continue;	
+        Eigen::Vector2d delta (
+            (gray1.ptr<uchar>(pixel.y)[pixel.x] - gray1.ptr<uchar>(pixel.y)[pixel.x-2]), 
+            (gray1.ptr<uchar>(pixel.y)[pixel.x] - gray1.ptr<uchar>(pixel.y-2)[pixel.x]));
+        if ( delta.norm() < 10 )
+            continue;	
+        commonview.push_back(pixel);
+
+    }
+    vector<cv::Point> commonview_down;
+	Mat show=img1_bev.clone();
+    srand((int)time(0));
+    for(int i=0;i<down_sample;i++){
+        int k=rand()%commonview.size();
+        commonview_down.push_back(commonview[k]);
+        circle(show, commonview[k], 3,  Scalar(0, 0, 0), -1);
+    }
+    return commonview_down;
+}
