@@ -289,10 +289,6 @@ void CameraOptimization(Optimizer &opt, string cameraType) {
        << during_calib_ + during_calib__ + during_calib___ << "s" << endl;
 }
 
-int main() {
-  // string
-  // file="/home/PJLAB/lijixiang/Documents/surround-camera_calib-master/auto_calib/imgs";
-
   // camera_model:0-fisheye;1-Ocam;2-pinhole
   int camera_model = 2;
 
