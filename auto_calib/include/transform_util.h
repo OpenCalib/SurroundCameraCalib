@@ -111,7 +111,7 @@ public:
     cv::Mat_<double> T1 = (cv::Mat_<double>(4, 1) << T.at<double>(0, 0),
                            T.at<double>(1, 0), T.at<double>(2, 0), 1.0);
 
-    cv::hconcat(R1, T1, RT); // C=A+B左右拼接
+    cv::hconcat(R1, T1, RT);
     Eigen::Matrix4d RT_;
     cv2eigen(RT, RT_);
     return RT_;
