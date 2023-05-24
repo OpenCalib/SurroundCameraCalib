@@ -4,10 +4,10 @@ surround-camera_calib is a calibration toolbox for surround view cameras or surr
 
 | calibration param |calibration type| calibration method | mannual calibration | auto calibration | usage documentation |
 | :--------------: |:--------------:| :------------: | :--------------: | :------------: | :------------: |
-| surround_cameras (fisheye) | extrinsic |  target-less    |    &#10004; |             |[camera2car](camera2car/README.md)|
-| surround_cameras (fisheye) | extrinsic |  target-less    |             |  &#10004;  |[lidar2car](lidar2car/README.md)|
-| surround_cameras            | extrinsic |  target-less   |             |  &#10004;  |[pose_sensor2car](pose_sensor2car/README.md)|
-| surround_cameras            | extrinsic |  target        |             |  &#10004;  |[radar2car](radar2car/README.md)|
+| surround_cameras (fisheye) | extrinsic |  target-less    |    &#10004; |             |[manual_calib](manual_calib/README.md)|
+| surround_cameras (fisheye) | extrinsic |  target-less    |             |  &#10004;  |[auto_calib_fisheye](auto_calib_fisheye/README.md)|
+| surround_cameras            | extrinsic |  target-less   |             |  &#10004;  |[auto_calib](auto_calib/README.md)|
+| surround_cameras            | extrinsic |  target        |             |  &#10004;  |[auto_calib_target](auto_calib_target/README.md)|
 
 ## Citation
 If you find this project useful in your research, please consider cite:
