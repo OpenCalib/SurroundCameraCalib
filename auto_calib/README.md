@@ -14,7 +14,7 @@ The executable file is under the bin folder.
 cd ~./auto_calib/
 ./bin/run_AVM_Calibration
 ```
-Before calibration
+Before calibration (the calibration board here only provides some texture information.)
  <img src="./before_all_calib.png" width="100%" height="100%" alt="Calibration result" div align=center />
 After calibration
  <img src="./after_all_calib.png" width="100%" height="100%" alt="Calibration result" div align=center />
