@@ -3,9 +3,9 @@
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
-#include <opencv2/core/eigen.hpp>
+#include<opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
+#include<opencv2/core/eigen.hpp>
 inline double rad2deg(double radians) { return radians * 180.0 / M_PI; }
 inline double deg2rad(double degrees) { return degrees * M_PI / 180.0; }
 
@@ -15,10 +15,10 @@ public:
   ~TransformUtil() = default;
 
   static cv::Mat eigen2mat(Eigen::Matrix3d A) {
-    cv::Mat B;
-    cv::eigen2cv(A, B);
+      cv::Mat B;
+      cv::eigen2cv(A, B);
 
-    return B;
+      return B;
   }
 
   static Eigen::Matrix4d GetMatrix(const Eigen::Vector3d &translation,
@@ -37,7 +37,7 @@ public:
     return ret;
   }
 
-  static Eigen::Matrix4d GetDeltaT(const vector<double> var) {
+  static Eigen::Matrix4d GetDeltaT(const vector<double>var) {
     auto deltaR = Eigen::Matrix3d(
         Eigen::AngleAxisd(deg2rad(var[2]), Eigen::Vector3d::UnitZ()) *
         Eigen::AngleAxisd(deg2rad(var[1]), Eigen::Vector3d::UnitY()) *
@@ -67,54 +67,60 @@ public:
     }
 
     Eigen::Vector3d eul;
-    eul(0) = z * 180 / M_PI;
-    eul(1) = y * 180 / M_PI;
-    eul(2) = x * 180 / M_PI;
+    eul(0) = z*180/M_PI;
+    eul(1) = y*180/M_PI;
+    eul(2) = x*180/M_PI;
     return eul;
   }
 
-  static Eigen::Matrix3d
-  eulerAnglesToRotationMatrix(Vec3f &theta) // theta为角度制
+  static Eigen::Matrix3d eulerAnglesToRotationMatrix(Vec3f &theta)//theta为角度制
   {
-
+    
     //转化为弧度制
-    double th0 = M_PI * theta[0] / 180;
-    double th1 = M_PI * theta[1] / 180;
-    double th2 = M_PI * theta[2] / 180;
+    double th0=M_PI*theta[0]/180;
+    double th1=M_PI*theta[1]/180;
+    double th2=M_PI*theta[2]/180;
     // Calculate rotation about x axis
-    Mat R_x = (Mat_<double>(3, 3) << 1, 0, 0, 0, cos(th0), -sin(th0), 0,
-               sin(th0), cos(th0));
-
+    Mat R_x = (Mat_<double>(3,3) <<
+               1,       0,              0,
+               0,       cos(th0),   -sin(th0),
+               0,       sin(th0),    cos(th0)
+               );
+     
     // Calculate rotation about y axis
-    Mat R_y = (Mat_<double>(3, 3) << cos(th1), 0, sin(th1), 0, 1, 0, -sin(th1),
-               0, cos(th1));
-
+    Mat R_y = (Mat_<double>(3,3) <<
+               cos(th1),    0,      sin(th1),
+               0,               1,      0,
+               -sin(th1),   0,      cos(th1)
+               );
+     
     // Calculate rotation about z axis
-    Mat R_z = (Mat_<double>(3, 3) << cos(th2), -sin(th2), 0, sin(th2), cos(th2),
-               0, 0, 0, 1);
-
+    Mat R_z = (Mat_<double>(3,3) <<
+               cos(th2),    -sin(th2),      0,
+               sin(th2),    cos(th2),       0,
+               0,               0,                  1);
+        
     // Combined rotation matrix
-    Mat R = R_z * R_y * R_x;
+    Mat R = R_z * R_y * R_x;  
     Eigen::Matrix3d R_;
-    cv2eigen(R, R_);
+    cv2eigen(R,R_);
     return R_;
   }
 
-  static Eigen::Matrix4d R_T2RT(Mat R, Mat T) {
-    Mat RT;
-    Mat_<double> R1 =
-        (cv::Mat_<double>(4, 3) << R.at<double>(0, 0), R.at<double>(0, 1),
-         R.at<double>(0, 2), R.at<double>(1, 0), R.at<double>(1, 1),
-         R.at<double>(1, 2), R.at<double>(2, 0), R.at<double>(2, 1),
-         R.at<double>(2, 2), 0.0, 0.0, 0.0);
+  static Eigen::Matrix4d R_T2RT(Mat R, Mat T)
+  {
+	  Mat RT;
+	  Mat_<double> R1 = (cv::Mat_<double>(4, 3) << R.at<double>(0, 0), R.at<double>(0, 1), R.at<double>(0, 2),
+	  	R.at<double>(1, 0), R.at<double>(1, 1), R.at<double>(1, 2),
+	  	R.at<double>(2, 0), R.at<double>(2, 1), R.at<double>(2, 2),
+          0.0,0.0,0.0);
 
-    cv::Mat_<double> T1 = (cv::Mat_<double>(4, 1) << T.at<double>(0, 0),
-                           T.at<double>(1, 0), T.at<double>(2, 0), 1.0);
-
-    cv::hconcat(R1, T1, RT); // C=A+B左右拼接
+	  cv::Mat_<double> T1 = (cv::Mat_<double>(4, 1) << T.at<double>(0, 0), T.at<double>(1, 0), T.at<double>(2, 0),1.0);
+  
+	  cv::hconcat(R1, T1, RT);//C=A+B左右拼接
     Eigen::Matrix4d RT_;
-    cv2eigen(RT, RT_);
-    return RT_;
+    cv2eigen(RT,RT_);
+	  return RT_;
   }
 };
 
