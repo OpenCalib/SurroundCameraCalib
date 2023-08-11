@@ -31,15 +31,28 @@ cd bin
 ```
  ## Customize(your examples)
  If you need to calibrate base on your data, you can follow as below steps: 
-- Prepare your surround camera images and the extrinsics and the intrinsic parameters etc.(set in /src/optimizer.cpp)
+### Prepare your surround camera images and the extrinsics and the intrinsic parameters etc.(set in /src/optimizer.cpp)
   - set the extrinsics in class function---Optimizer::initializePose()
   - set the intrinsics in class function---Optimizer::initializeK()
   - set the fisheye distortion parameters in class function---Optimizer::initializeD()  Ps:if pinhole camera, set 0
   - set the BEV camera intrinsic and height(or you keep same as ours) in class function---Optimizer::initializeKG() and Optimizer::initializeHeight()
   - set front,left,right,back BEV image tail size in class function---Optimizer::initializetailsize()
-- Set calibration model(set in /src/calibration_fixedF.cpp or /src/calibration_fixedB.cpp)
+### Set calibration model(set in /src/calibration_fixedF.cpp or /src/calibration_fixedB.cpp)
   - choose camera model(camera_model)：0-fisheye;1-Ocam;2-pinhole
-  - if add extra disturbance on surround cameras(flag_add_disturbance):
+  - if add extra disturbance on surround cameras(flag_add_disturbance)：1-add;0-not
+  - choose phase solution model(solution_model_):
+    - 1.pure gray pipeline in three phase of optimization:
+            solution_model_="gray"
+    - 2.(default)Adpative Threshold Binarization in first phase and pure gray in the 2nd&3rd phase of optimization:  
+            solution_model_="gray+atb"
+    - 3.pure Adpative Threshold Binarization in all three phase of optimization:
+            solution_model_="atb"
+ - (Optional) if add road semantic segmentation when in texture extraction process to improve accuracy(add_semantic_segmentation_front/left/right/back):1-add 0-not
+   - if you want to add road semantic segmentation mask you need to provide road semantic segmentation mask.
+ - choose camera fixed(fixed):"front" or "back"
+
+
+    
 
 ## Citation
 If you find this project useful in your research, please consider cite:
