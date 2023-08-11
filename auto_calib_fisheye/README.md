@@ -9,6 +9,38 @@ surround-camera_calib is a calibration toolbox for surround view cameras or surr
 | surround_cameras            | extrinsic |  target-less   |             |  &#10004;  |[auto_calib](auto_calib/README.md)|
 | surround_cameras            | extrinsic |  target        |             |  &#10004;  |[auto_calib_target](auto_calib_target/README.md)|
 
+## Prerequisites
+- Cmake
+- opencv 3.4.5
+- eigen 3
+
+## Compile
+```shell
+# mkdir build
+mkdir -p build && cd build
+# build
+cmake .. && make
+```
+## Run(our examples)
+```shell
+cd bin
+#choose 1.Calibrate by fixing the front
+./run_AVM_Calibration_F
+#choose 2.Calibrate by fixing the back
+./run_AVM_Calibration_B
+```
+ ## Customize(your examples)
+ If you need to calibrate base on your data, you can follow as below steps: 
+- Prepare your surround camera images and the extrinsics and the intrinsic parameters etc.(set in /src/optimizer.cpp)
+  - set the extrinsics in class function---Optimizer::initializePose()
+  - set the intrinsics in class function---Optimizer::initializeK()
+  - set the fisheye distortion parameters in class function---Optimizer::initializeD()  Ps:if pinhole camera, set 0
+  - set the BEV camera intrinsic and height(or you keep same as ours) in class function---Optimizer::initializeKG() and Optimizer::initializeHeight()
+  - set front,left,right,back BEV image tail size in class function---Optimizer::initializetailsize()
+- Set calibration model(set in /src/calibration_fixedF.cpp or /src/calibration_fixedB.cpp)
+  - choose camera model(camera_model)：0-fisheye;1-Ocam;2-pinhole
+  - if add extra disturbance on surround cameras(flag_add_disturbance):
+
 ## Citation
 If you find this project useful in your research, please consider cite:
 ```
