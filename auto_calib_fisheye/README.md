@@ -48,7 +48,7 @@ cd bin
     - 3.pure Adpative Threshold Binarization in all three phase of optimization:
             solution_model_="atb"
  - (Optional) if add road semantic segmentation when in texture extraction process to improve accuracy(add_semantic_segmentation_front/left/right/back):1-add 0-not
-   - if you want to add road semantic segmentation mask you need to provide road semantic segmentation mask.
+   - Ps: if you want to add road semantic segmentation mask you need to provide road semantic segmentation mask.
  - choose camera fixed(fixed):"front" or "back"
 
 
