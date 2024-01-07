@@ -351,8 +351,9 @@ int main(){
     imgs3~5 are the surround images captured in Carla engine(pinhole,Fov=125)
     imgs6 are the surround images captured by a car in the calibration room(fisheye,Fov=195).
     */
-    prefix="../imgs6";
+    prefix="../imgs1";
     suffix=".jpg";
+    std::cout << prefix+"/Front"+suffix << "\n";
     Mat imgf=cv::imread(prefix+"/Front"+suffix);
     Mat imgl=cv::imread(prefix+"/Left"+suffix);
     Mat imgb=cv::imread(prefix+"/Back"+suffix);
@@ -365,7 +366,7 @@ int main(){
     int coarse_search_flag=1;
 
     //which data_set(imgsX)
-    string data_set="imgs6";
+    string data_set="imgs1";
 
     //which camera fixed
     string fixed="front";
