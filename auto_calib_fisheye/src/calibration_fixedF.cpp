@@ -352,12 +352,11 @@ int main(){
     imgs6 are the surround images captured by a car in the calibration room(fisheye,Fov=195).
     */
     prefix="../imgs1";
-    suffix=".jpg";
-    std::cout << prefix+"/Front"+suffix << "\n";
-    Mat imgf=cv::imread(prefix+"/Front"+suffix);
-    Mat imgl=cv::imread(prefix+"/Left"+suffix);
-    Mat imgb=cv::imread(prefix+"/Back"+suffix);
-    Mat imgr=cv::imread(prefix+"/Right"+suffix);
+    suffix=".png";
+    Mat imgl=cv::imread(prefix+"/cam0"+suffix);
+    Mat imgf=cv::imread(prefix+"/cam1"+suffix);
+    Mat imgb=cv::imread(prefix+"/cam2"+suffix);
+    Mat imgr=cv::imread(prefix+"/cam3"+suffix);
 
     //bev rows、cols
     int bev_rows=1000,bev_cols=1000;//recommendation : pinhole---1500,fisheye---1000
@@ -381,39 +380,54 @@ int main(){
 	Mat GL=opt.project_on_ground(imgl,opt.extrinsic_left,opt.intrinsic_left,opt.distortion_params_left,opt.KG,opt.brows,opt.bcols,opt.hl);
 	Mat GR=opt.project_on_ground(imgr,opt.extrinsic_right,opt.intrinsic_right,opt.distortion_params_right,opt.KG,opt.brows,opt.bcols,opt.hr);
 
+    // cv::Mat tmp0 = cv::Mat::zeros(800, 1280, CV_8UC3);
+    // cv::Mat tmp1 = cv::Mat::zeros(800, 1280, CV_8UC3);
+    // cv::Mat tmp2 = cv::Mat::zeros(800, 1280, CV_8UC3);
+    // cv::Mat tmp3 = cv::Mat::zeros(800, 1280, CV_8UC3);
+    // for (size_t i = 0; i < 1280 * 800; i++) {
+    //     tmp0.data[i * 3 + 0] = 255;
+    //     tmp1.data[i * 3 + 1] = 255;
+    //     tmp2.data[i * 3 + 2] = 255;
+    // }
+    // cv::imwrite("blue.png", tmp0);
+    // cv::imwrite("green.png", tmp1);
+    // cv::imwrite("red.png", tmp2);
+    // cv::imwrite("black.png", tmp3);
+    // exit(0);
 
-    // imshow("GF",GF);
-    // waitKey(0);
-    // imwrite(prefix+"/GF.png",GF);
-    // imshow("GB",GB);
-    // waitKey(0);
-    // imwrite(prefix+"/GB.png",GB);
-    // imshow("GL",GL);
-    // waitKey(0);
-    // imwrite(prefix+"/GL.png",GL);
-    // imshow("GR",GR);
-    // waitKey(0);
-    // imwrite(prefix+"/GR.png",GR);
+
+    imshow("GF",GF);
+    waitKey(0);
+    imwrite(prefix+"/GF.png",GF);
+    imshow("GB",GB);
+    waitKey(0);
+    imwrite(prefix+"/GB.png",GB);
+    imshow("GL",GL);
+    waitKey(0);
+    imwrite(prefix+"/GL.png",GL);
+    imshow("GR",GR);
+    waitKey(0);
+    imwrite(prefix+"/GR.png",GR);
 
     GF=opt.tail(GF,"f");
-    // imwrite(prefix+"/GF_tail.png",GF);
-    // imshow("GF",GF);
-    // waitKey(0);
+    imwrite(prefix+"/GF_tail.png",GF);
+    imshow("GF",GF);
+    waitKey(0);
 
     GB=opt.tail(GB,"b");
-    // imwrite(prefix+"/GB_tail.png",GB);
-    // imshow("GB",GB);
-    // waitKey(0);
+    imwrite(prefix+"/GB_tail.png",GB);
+    imshow("GB",GB);
+    waitKey(0);
 
     GL=opt.tail(GL,"l");
-    // imwrite(prefix+"/GL_tail.png",GL);
-    // imshow("GL",GL);
-    // waitKey(0);
+    imwrite(prefix+"/GL_tail.png",GL);
+    imshow("GL",GL);
+    waitKey(0);
 
     GR=opt.tail(GR,"r");
-    // imwrite(prefix+"/GR_tail.png",GR);
-    // imshow("GR",GR);
-    // waitKey(0);
+    imwrite(prefix+"/GR_tail.png",GR);
+    imshow("GR",GR);
+    waitKey(0);
 
 	Mat bev_before=opt.generate_surround_view(GF,GL,GB,GR);
     imwrite(prefix+"/before_all_calib.png",bev_before);

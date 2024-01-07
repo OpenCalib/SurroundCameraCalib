@@ -68,6 +68,7 @@ void extractor::findcontours(){
 		}
 	}
 	vector<vector<Point>> contours_after_filter;
+	printf("contours.size() = %lu\n", contours.size());
 	contours_after_filter.push_back(contours[index]);;
 	std::vector<std::vector<cv::Point>> contours_pixels;
 	contours_pixels=fillContour(contours_after_filter);
