@@ -429,10 +429,10 @@ int main(){
     imshow("GR",GR);
     waitKey(0);
 
-	Mat bev_before=opt.generate_surround_view(GF,GL,GB,GR);
+    Mat bev_before=opt.generate_surround_view(GF,GL,GB,GR);
     imwrite(prefix+"/before_all_calib.png",bev_before);
-	// imshow("opt_before",bev_before);
-    // waitKey(0);
+    imshow("opt_before",bev_before);
+    waitKey(0);
     
 
 
