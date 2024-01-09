@@ -364,7 +364,9 @@ void Optimizer::initializeD()
         D_R = {0, 0, 0, 0};
     }
 
-// {"mean": 0.728127, "max": 1.592387, "camera_matrix": [[304.007121, 0.0, 638.469054], [0.0, 304.078429, 399.956311], [0.0, 0.0, 1.0]], "dist_coefs": [[0.138281], [0.025172], [-0.030963], [0.005019]]}
+    // {"mean": 0.728127, "max": 1.592387, "camera_matrix": [[304.007121, 0.0,
+    // 638.469054], [0.0, 304.078429, 399.956311], [0.0, 0.0, 1.0]],
+    // "dist_coefs": [[0.138281], [0.025172], [-0.030963], [0.005019]]}
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
@@ -432,13 +434,7 @@ void Optimizer::initializePose()
     Eigen::Matrix4d T_LG;
     Eigen::Matrix4d T_BG;
     Eigen::Matrix4d T_RG;
-    // mean: 1.88649
-    // rvecs:
-    // 0.00348309, 0.0371387, 2.36463
-    // tvecs:
-    // -781.234
-    // 1436.17
-    // 66.6156
+    Eigen::Matrix4d rot90;
 
     if (data_index == "imgs3" || data_index == "imgs4" || data_index == "imgs5")
     {
@@ -447,33 +443,39 @@ void Optimizer::initializePose()
         T_BG << -1, 0, 0, 0, 0, 0, 1, -4.1, 0, 1, 0, -2, 0, 0, 0, 1;
         T_RG << 0, 1, 0, 0, 0, 0, 1, -4.1, 1, 0, 0, -1, 0, 0, 0, 1;
     }
+    rot90 << 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
         // clang-format off
 	auto r_mat = getMatrix(0.00348309, 0.0371387, 2.36463);
-	T_FG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -781.234/1000,
+	T_LG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -781.234/1000,
 		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1436.17/1000 ,
 		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), 66.6156/1000 ,
 		0, 0, 0, 1;
 
+        T_LG = T_LG * rot90;
+
 	r_mat = getMatrix(1.63932, -1.89911, -0.0459019);
-	T_RG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -29.6463/1000,
+	T_FG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -29.6463/1000,
 		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1070.4/1000  ,
 		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), -1909.5/1000 ,
 		0, 0, 0, 1;
+        T_FG = T_FG * rot90;
 
 	r_mat = getMatrix(-1.54026, 2.19065, 0.0314631);
-	T_LG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 15.4238/1000 ,
+	T_BG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 15.4238/1000 ,
 		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1670.21/1000 ,
 		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), -1244.62/1000,
 		0, 0, 0, 1;
+        T_BG = T_BG * rot90;
 
 	r_mat = getMatrix(3.138, -0.0157633, -2.33495);
-	T_BG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 739.047/1000,
+	T_RG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 739.047/1000,
 		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1411.51/1000,
 		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), 11.8222/1000,
 		0, 0, 0, 1;
+        T_RG = T_RG * rot90;
 
         printf("Set custom Extrinsics\n");
 
@@ -705,10 +707,10 @@ void Optimizer::initializetailsize()
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
-        sizef = 420;
-        sizel = 380;
-        sizeb = 420;
-        sizer = 360;
+        sizef = 380;
+        sizel = 550;
+        sizeb = 380;
+        sizer = 550;
     }
 
     if (data_index == "imgs6")

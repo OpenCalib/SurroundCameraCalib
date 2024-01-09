@@ -396,24 +396,23 @@ int main(){
     // exit(0);
 
 
-    imshow("GF",GF);
-    waitKey(0);
-    imwrite(prefix+"/GF.png",GF);
-    imshow("GB",GB);
-    waitKey(0);
-    imwrite(prefix+"/GB.png",GB);
-    imshow("GL",GL);
-    waitKey(0);
-    imwrite(prefix+"/GL.png",GL);
-    imshow("GR",GR);
-    waitKey(0);
-    imwrite(prefix+"/GR.png",GR);
-
+    // imshow("GF",GF);
+    // waitKey(0);
+    // imwrite(prefix+"/GF.png",GF);
+    // imshow("GB",GB);
+    // waitKey(0);
+    // imwrite(prefix+"/GB.png",GB);
+    // imshow("GL",GL);
+    // waitKey(0);
+    // imwrite(prefix+"/GL.png",GL);
+    // imshow("GR",GR);
+    // waitKey(0);
+    // imwrite(prefix+"/GR.png",GR);
+    //
     GF=opt.tail(GF,"f");
     imwrite(prefix+"/GF_tail.png",GF);
     imshow("GF",GF);
     waitKey(0);
-
     GB=opt.tail(GB,"b");
     imwrite(prefix+"/GB_tail.png",GB);
     imshow("GB",GB);
