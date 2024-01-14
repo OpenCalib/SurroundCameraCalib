@@ -1,0 +1,56 @@
+﻿Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 80
+AccessModifierOffset: "-4"
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: "true"
+AlignConsecutiveAssignments: "true"
+AlignEscapedNewlines: Left
+AlignOperands: "true"
+AlignTrailingComments: "true"
+AllowAllConstructorInitializersOnNextLine: "false"
+AllowShortBlocksOnASingleLine: "false"
+AllowShortCaseLabelsOnASingleLine: "false"
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLoopsOnASingleLine: "false"
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLambdasOnASingleLine: Inline
+AlwaysBreakBeforeMultilineStrings: "false"
+AlwaysBreakTemplateDeclarations: "Yes"
+IncludeBlocks: "Preserve"
+BinPackArguments: "true"
+BinPackParameters: "true"
+BreakAfterJavaFieldAnnotations: "true"
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+BreakBeforeTernaryOperators: "true"
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+CompactNamespaces: "false"
+FixNamespaceComments: "true"
+IndentCaseLabels: "true"
+IndentPPDirectives: None
+IndentWidth: "4"
+KeepEmptyLinesAtTheStartOfBlocks: "false"
+MaxEmptyLinesToKeep: "1"
+NamespaceIndentation: None
+PointerAlignment: Left
+SpaceInEmptyParentheses: "false"
+SpacesInAngles: "false"
+SpacesInCStyleCastParentheses: "false"
+SpacesInContainerLiterals: "false"
+SpacesInParentheses: "false"
+SpacesInSquareBrackets: "false"
+Standard: Cpp11
+TabWidth: "4"

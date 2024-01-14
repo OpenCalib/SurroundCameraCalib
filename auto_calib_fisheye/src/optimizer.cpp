@@ -1,6 +1,7 @@
 #include "optimizer.h"
 #include <fstream>
 #include <random>
+#include "camera_params_loader.h"
 #include "transform_util.h"
 
 Mat Optimizer::eigen2mat(Eigen::MatrixXd A)
@@ -434,7 +435,6 @@ void Optimizer::initializePose()
     Eigen::Matrix4d T_LG;
     Eigen::Matrix4d T_BG;
     Eigen::Matrix4d T_RG;
-    Eigen::Matrix4d rot90;
 
     if (data_index == "imgs3" || data_index == "imgs4" || data_index == "imgs5")
     {
@@ -443,64 +443,37 @@ void Optimizer::initializePose()
         T_BG << -1, 0, 0, 0, 0, 0, 1, -4.1, 0, 1, 0, -2, 0, 0, 0, 1;
         T_RG << 0, 1, 0, 0, 0, 0, 1, -4.1, 1, 0, 0, -1, 0, 0, 0, 1;
     }
-    rot90 << 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
-        // clang-format off
-	auto r_mat = getMatrix(0.00348309, 0.0371387, 2.36463);
-	T_LG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -781.234/1000,
-		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1436.17/1000 ,
-		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), 66.6156/1000 ,
-		0, 0, 0, 1;
-
-        T_LG = T_LG * rot90;
-
-	r_mat = getMatrix(1.63932, -1.89911, -0.0459019);
-	T_FG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), -29.6463/1000,
-		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1070.4/1000  ,
-		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), -1909.5/1000 ,
-		0, 0, 0, 1;
-        T_FG = T_FG * rot90;
-
-	r_mat = getMatrix(-1.54026, 2.19065, 0.0314631);
-	T_BG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 15.4238/1000 ,
-		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1670.21/1000 ,
-		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), -1244.62/1000,
-		0, 0, 0, 1;
-        T_BG = T_BG * rot90;
-
-	r_mat = getMatrix(3.138, -0.0157633, -2.33495);
-	T_RG << r_mat(0, 0), r_mat(0, 1), r_mat(0, 2), 739.047/1000,
-		r_mat(1, 0), r_mat(1, 1), r_mat(1, 2), 1411.51/1000,
-		r_mat(2, 0), r_mat(2, 1), r_mat(2, 2), 11.8222/1000,
-		0, 0, 0, 1;
-        T_RG = T_RG * rot90;
-
+        load_extrinsics("/home/kiennt63/release/calib/autorc-test/output", T_LG,
+                        T_FG, T_BG, T_RG);
         printf("Set custom Extrinsics\n");
 
-        // T_FG << 9.99277118e-01, 3.82390286e-04, -3.80143958e-02, 6.75437418e-01 / 10, 
-        //         -2.30748265e-02, -7.88582447e-01, -6.14495953e-01, 2.50896883e+01 / 10, 
-        //         -3.02124625e-02, 6.14928921e-01, -7.88003572e-01, 3.17779305e+00 / 10, 
-        //         0, 0, 0, 1;
+        // T_FG << 9.99277118e-01, 3.82390286e-04,
+        // -3.80143958e-02, 6.75437418e-01 / 10,
+        //         -2.30748265e-02, -7.88582447e-01,
+        //         -6.14495953e-01, 2.50896883e+01 / 10,
+        //         -3.02124625e-02, 6.14928921e-01,
+        //         -7.88003572e-01, 3.17779305e+00 / 10, 0, 0, 0, 1;
         //
         // T_LG << -1.21898860e-02, 9.99924056e-01, -1.81349393e-03,
         //         1.36392943e+00 / 10, 8.02363600e-01, 8.69913885e-03,
         //         -5.96772133e-01, 1.60942881e+01 / 10, -5.96711036e-01,
-        //         -8.72966581e-03, -8.02408707e-01, 1.04105913e+01 / 10, 
-	       //  0, 0, 0, 1;
+        //         -8.72966581e-03, -8.02408707e-01, 1.04105913e+01 / 10,
+        //  0, 0, 0, 1;
         //
         // T_BG << -9.99615699e-01, 1.56439861e-02, -2.28849354e-02,
         //         1.09266953e+00 / 10, 2.59906371e-02, 8.16008735e-01,
         //         -5.77454960e-01, 2.46308124e+01 / 10, 9.64060983e-03,
-        //         -5.77827838e-01, -8.16101739e-01, 6.60957845e+00 / 10, 
-	       //  0, 0, 0, 1;
+        //         -5.77827838e-01, -8.16101739e-01, 6.60957845e+00 / 10,
+        //  0, 0, 0, 1;
         //
         // T_RG << 4.57647596e-03, -9.99989102e-01, 9.22798184e-04,
         //         -1.66115120e-01 / 10, -6.26343448e-01, -3.58584197e-03,
         //         -7.79538984e-01, 1.76226207e+01 / 10, 7.79533797e-01,
-        //         2.98955282e-03, -6.26353033e-01, 6.08338205e+00 / 10, 
-	       //  0, 0, 0, 1;
+        //         2.98955282e-03, -6.26353033e-01, 6.08338205e+00 / 10,
+        //  0, 0, 0, 1;
         // clang-format on
     }
 
@@ -573,7 +546,7 @@ void Optimizer::initializePose()
         // Mat_<double> left_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
         Mat_<double> left_disturbance_t =
             (Mat_<double>(3, 1) << 0.0095, 0.0025, -0.0086);
-        left_disturbance_rot_euler << 1.95, -1.25, 2.86;
+        left_disturbance_rot_euler << 1.25, -1.25, 0.86;
         left_disturbance_rot_mat = TransformUtil::eulerAnglesToRotationMatrix(
             left_disturbance_rot_euler);
         left_disturbance = TransformUtil::R_T2RT(
@@ -587,7 +560,7 @@ void Optimizer::initializePose()
         // Mat_<double> right_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
         Mat_<double> right_disturbance_t =
             (Mat_<double>(3, 1) << 0.0065, -0.0075, 0.0095);
-        right_disturbance_rot_euler << 2.95, 0.95, -1.8;
+        right_disturbance_rot_euler << 1.25, 0.95, -1.3;
         right_disturbance_rot_mat = TransformUtil::eulerAnglesToRotationMatrix(
             right_disturbance_rot_euler);
         right_disturbance = TransformUtil::R_T2RT(
@@ -600,10 +573,11 @@ void Optimizer::initializePose()
             Eigen::Matrix4d behind_disturbance;
             Eigen::Matrix3d behind_disturbance_rot_mat;
             Vec3f behind_disturbance_rot_euler;
-            // Mat_<double> behind_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
-            Mat_<double> behind_disturbance_t =
-                (Mat_<double>(3, 1) << -0.002, -0.0076, 0.0096);
-            behind_disturbance_rot_euler << -1.75, 2.95, -1.8;
+            Mat_<double> behind_disturbance_t = (Mat_<double>(3, 1) << 0, 0, 0);
+            // Mat_<double> behind_disturbance_t =
+            //     (Mat_<double>(3, 1) << -0.002, -0.0076, 0.0096);
+            // behind_disturbance_rot_euler << -1.25, 1.25, -1.1;
+            behind_disturbance_rot_euler << 0, 0, 0;
             behind_disturbance_rot_mat =
                 TransformUtil::eulerAnglesToRotationMatrix(
                     behind_disturbance_rot_euler);
@@ -707,10 +681,10 @@ void Optimizer::initializetailsize()
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
-        sizef = 380;
-        sizel = 550;
-        sizeb = 380;
-        sizer = 550;
+        sizef = 330;
+        sizel = 460;
+        sizeb = 330;
+        sizer = 460;
     }
 
     if (data_index == "imgs6")
@@ -811,6 +785,7 @@ Mat Optimizer::project_on_ground(Mat img, Eigen::Matrix4d T_CG,
                                  Eigen::Matrix3d K_G, int rows, int cols,
                                  float height)
 {
+    // create mesh of BEV image -> fill with pixel index value (BEV image frame)
     Mat p_G = Mat::ones(3, rows * cols, CV_64FC1);
     for (int i = 0; i < rows; i++)
     {
@@ -821,10 +796,15 @@ Mat Optimizer::project_on_ground(Mat img, Eigen::Matrix4d T_CG,
         }
     }
 
+    // mesh p_G projected to BEV camera frame with height
     Mat P_G                         = Mat::ones(4, rows * cols, CV_64FC1);
     P_G(Rect(0, 0, rows * cols, 3)) = eigen2mat(K_G.inverse()) * p_G * height;
+
+    // set 3th row of P_G to all zero
     if (camera_model == 0) P_G(Rect(0, 2, rows * cols, 1)) = 0;
-    Mat P_GC  = Mat::zeros(4, rows * cols, CV_64FC1);
+    Mat P_GC = Mat::zeros(4, rows * cols, CV_64FC1);
+
+    // T_CG_ is the cv::Mat of camera extrinsics
     Mat T_CG_ = (Mat_<double>(4, 4) << T_CG(0, 0), T_CG(0, 1), T_CG(0, 2),
                  T_CG(0, 3), T_CG(1, 0), T_CG(1, 1), T_CG(1, 2), T_CG(1, 3),
                  T_CG(2, 0), T_CG(2, 1), T_CG(2, 2), T_CG(2, 3), T_CG(3, 0),

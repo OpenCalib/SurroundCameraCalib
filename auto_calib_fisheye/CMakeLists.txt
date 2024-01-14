@@ -1,11 +1,12 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
+
 project(online_Calibration)
 set(CMAKE_CXX_FLAGS "-std=c++17 -g -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread")
-SET(CMAKE_BUILD_TYPE "Release")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -g3")
+SET(CMAKE_BUILD_TYPE "Debug")
 
 include_directories("/usr/include/eigen3")
-find_package(OpenCV REQUIRED )
+find_package(OpenCV REQUIRED HINTS /opt/opencv/opencv-3.4.5)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 link_directories(${OpenCV_INSTALL_PATH}/lib)
