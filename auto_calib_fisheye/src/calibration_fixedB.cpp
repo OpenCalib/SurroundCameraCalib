@@ -454,8 +454,14 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
     return during_calib_ + during_calib__ + during_calib___;
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    if (argc <= 3)
+    {
+        printf("Usage %s <initial calibration> <image set dir>\n", argv[0]);
+        exit(-1);
+    }
+
     // camera_model:0-fisheye;1-Ocam;2-pinhole
     int camera_model = 0;
 
@@ -506,7 +512,7 @@ int main()
     string fixed = "back";
 
     // initilize the optimizer
-    Optimizer opt(&imgf, &imgl, &imgb, &imgr, camera_model, bev_rows, bev_cols,
+    Optimizer opt(argv[1], &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows, bev_cols,
                   fixed, coarse_search_flag, data_set, flag_add_disturbance,
                   prefix, solution_model_);
 

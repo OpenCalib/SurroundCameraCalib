@@ -20,6 +20,9 @@ private:
     mutable std::mutex mutexval;
 
 public:
+    // path to load initialize extrinsics
+    std::string calibPath_;
+
     // optimization phase(1/2/3)
     int phase;
 
@@ -154,7 +157,7 @@ public:
     double ncoef_fl, ncoef_fr, ncoef_bl, ncoef_br;
 
     // Optimizer();
-    Optimizer(const Mat *imgf, const Mat *imgl, const Mat *imgb,
+    Optimizer(const std::string& calibPath, const Mat *imgf, const Mat *imgl, const Mat *imgb,
               const Mat *imgr, int camera_model_index, int rows, int cols,
               string first_order, int flag, string data_set,
               int flag_add_disturbance, string prefix, string solution_model_);

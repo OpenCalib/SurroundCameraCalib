@@ -47,7 +47,7 @@ public:
         return ret;
     }
 
-    static Eigen::Matrix4d GetDeltaT(const vector<double> var)
+    static Eigen::Matrix4d GetDeltaT(const std::vector<double> var)
     {
         auto deltaR = Eigen::Matrix3d(
             Eigen::AngleAxisd(deg2rad(var[2]), Eigen::Vector3d::UnitZ()) *

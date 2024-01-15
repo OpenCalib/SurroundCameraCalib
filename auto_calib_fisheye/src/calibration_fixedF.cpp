@@ -8,6 +8,7 @@
 #include <Eigen/Geometry>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -28,7 +29,7 @@ using namespace std;
 double during_bev;
 double during_compute_error;
 double during_wrap;
-string prefix, suffix;
+string input, output, extension;
 
 /*
 Deviable Hierarchical Search Optimization Based on Concurrent Mode,
@@ -36,7 +37,7 @@ note:
     The search scopes in all phase of roll,pitch,yaw,dx,dy,dz and iterations
 could be customized based on your data.
 */
-double CameraOptimization(Optimizer &opt, string cameraType)
+double CameraOptimization(Optimizer& opt, string cameraType)
 {
     std::chrono::_V2::steady_clock::time_point end_calib_ =
         chrono::steady_clock::now();
@@ -463,8 +464,15 @@ double CameraOptimization(Optimizer &opt, string cameraType)
     return during_calib_ + during_calib__ + during_calib___;
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    if (argc <= 3)
+    {
+        printf("Usage %s <initial calibration> <image set dir> <output dir>\n",
+               argv[0]);
+        exit(-1);
+    }
+
     // camera_model:0-fisheye;1-Ocam;2-pinhole
     int camera_model = 0;
 
@@ -495,26 +503,6 @@ int main()
     engine(pinhole,Fov=125) imgs6 are the surround images captured by a car in
     the calibration room(fisheye,Fov=195).
     */
-    prefix   = "../imgs1";
-    suffix   = ".png";
-    Mat imgb = cv::imread(prefix + "/cam2" + suffix);
-    Mat imgf = cv::imread(prefix + "/cam1" + suffix);
-    Mat imgl = cv::imread(prefix + "/cam0" + suffix);
-    Mat imgr = cv::imread(prefix + "/cam3" + suffix);
-
-    // prefix="../imgs1";
-    // suffix=".png";
-    // Mat imgb=cv::imread(prefix+"/lux_a/rear"+suffix);
-    // Mat imgf=cv::imread(prefix+"/lux_a/front"+suffix);
-    // Mat imgl=cv::imread(prefix+"/lux_a/left"+suffix);
-    // Mat imgr=cv::imread(prefix+"/lux_a/right"+suffix);
-
-    // prefix="../imgs1";
-    // suffix=".jpeg";
-    // Mat imgb=cv::imread(prefix+"/image0_1704793892114"+suffix);
-    // Mat imgf=cv::imread(prefix+"/image1_1704793892114"+suffix);
-    // Mat imgl=cv::imread(prefix+"/image2_1704793892114"+suffix);
-    // Mat imgr=cv::imread(prefix+"/image3_1704793892114"+suffix);
 
     // bev rows、cols
     int bev_rows = 1000,
@@ -523,16 +511,24 @@ int main()
     // if add coarse search(1st search)
     int coarse_search_flag = 1;
 
-    // which data_set(imgsX)
-    string data_set = "imgs1";
-
     // which camera fixed
     string fixed = "front";
 
+    std::string dataset = "custom";
+
+    input     = argv[2];
+    output    = argv[3];
+    extension = ".png";
+    Mat imgb  = cv::imread(input + "/cam2" + extension);
+    Mat imgf  = cv::imread(input + "/cam1" + extension);
+    Mat imgl  = cv::imread(input + "/cam0" + extension);
+    Mat imgr  = cv::imread(input + "/cam3" + extension);
+    std::filesystem::create_directories(output);
+
     // initilize the optimizer
-    Optimizer opt(&imgf, &imgl, &imgb, &imgr, camera_model, bev_rows, bev_cols,
-                  fixed, coarse_search_flag, data_set, flag_add_disturbance,
-                  prefix, solution_model_);
+    Optimizer opt(argv[1], &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows,
+                  bev_cols, fixed, coarse_search_flag, dataset,
+                  flag_add_disturbance, output, solution_model_);
 
     // bev images before optimization
     Mat GF = opt.project_on_ground(
@@ -548,55 +544,27 @@ int main()
         imgr, opt.extrinsic_right, opt.intrinsic_right,
         opt.distortion_params_right, opt.KG, opt.brows, opt.bcols, opt.hr);
 
-    // cv::Mat tmp0 = cv::Mat::zeros(800, 1280, CV_8UC3);
-    // cv::Mat tmp1 = cv::Mat::zeros(800, 1280, CV_8UC3);
-    // cv::Mat tmp2 = cv::Mat::zeros(800, 1280, CV_8UC3);
-    // cv::Mat tmp3 = cv::Mat::zeros(800, 1280, CV_8UC3);
-    // for (size_t i = 0; i < 1280 * 800; i++) {
-    //     tmp0.data[i * 3 + 0] = 255;
-    //     tmp1.data[i * 3 + 1] = 255;
-    //     tmp2.data[i * 3 + 2] = 255;
-    // }
-    // cv::imwrite("blue.png", tmp0);
-    // cv::imwrite("green.png", tmp1);
-    // cv::imwrite("red.png", tmp2);
-    // cv::imwrite("black.png", tmp3);
-    // exit(0);
-
-    // imshow("GF",GF);
-    // waitKey(0);
-    // imwrite(prefix+"/GF.png",GF);
-    // imshow("GB",GB);
-    // waitKey(0);
-    // imwrite(prefix+"/GB.png",GB);
-    // imshow("GL",GL);
-    // waitKey(0);
-    // imwrite(prefix+"/GL.png",GL);
-    // imshow("GR",GR);
-    // waitKey(0);
-    // imwrite(prefix+"/GR.png",GR);
-    //
     GF = opt.tail(GF, "f");
-    imwrite(prefix + "/GF_tail.png", GF);
+    imwrite(output + "/GF_tail.png", GF);
     imshow("GF", GF);
     waitKey(0);
     GB = opt.tail(GB, "b");
-    imwrite(prefix + "/GB_tail.png", GB);
+    imwrite(output + "/GB_tail.png", GB);
     imshow("GB", GB);
     waitKey(0);
 
     GL = opt.tail(GL, "l");
-    imwrite(prefix + "/GL_tail.png", GL);
+    imwrite(output + "/GL_tail.png", GL);
     imshow("GL", GL);
     waitKey(0);
 
     GR = opt.tail(GR, "r");
-    imwrite(prefix + "/GR_tail.png", GR);
+    imwrite(output + "/GR_tail.png", GR);
     imshow("GR", GR);
     waitKey(0);
 
     Mat bev_before = opt.generate_surround_view(GF, GL, GB, GR);
-    imwrite(prefix + "/before_all_calib.png", bev_before);
+    imwrite(output + "/before_all_calib.png", bev_before);
     imshow("opt_before", bev_before);
     waitKey(0);
 
@@ -607,13 +575,13 @@ int main()
                    size);
     if (add_semantic_segmentation_front)
     {
-        Mat mask_fl = imread(prefix + "/mask/road_mask_front.png");
+        Mat mask_fl = imread(input + "/mask/road_mask_front.png");
         ext1.mask_ground.push_back(mask_fl);
     }
     ext1.Binarization();
     ext1.findcontours();
     opt.fl_pixels_texture = ext1.extrac_textures_and_save(
-        prefix + "/texture_fl.png", prefix + "/fl.csv");
+        input + "/texture_fl.png", input + "/fl.csv");
     if (ext1.exposure_flag && ext1.ncoef > 0.5)
     {
         opt.ncoef_fl = ext1.ncoef;
@@ -642,13 +610,13 @@ int main()
                    size);
     if (add_semantic_segmentation_front)
     {
-        Mat mask_fr = imread(prefix + "/mask/road_mask_front.png");
+        Mat mask_fr = imread(input + "/mask/road_mask_front.png");
         ext2.mask_ground.push_back(mask_fr);
     }
     ext2.Binarization();
     ext2.findcontours();
     opt.fr_pixels_texture = ext2.extrac_textures_and_save(
-        prefix + "/texture_fr.png", prefix + "/fr.csv");
+        input + "/texture_fr.png", input + "/fr.csv");
     if (ext2.exposure_flag && ext2.ncoef > 0.5)
     {
         opt.ncoef_fr = ext2.ncoef;
@@ -686,13 +654,13 @@ int main()
                    exposure_flag_bl, size);
     if (add_semantic_segmentation_left)
     {
-        Mat mask_bl = imread(prefix + "/mask/road_mask_left.png");
+        Mat mask_bl = imread(input + "/mask/road_mask_left.png");
         ext3.mask_ground.push_back(mask_bl);
     }
     ext3.Binarization();
     ext3.findcontours();
     opt.bl_pixels_texture = ext3.extrac_textures_and_save(
-        prefix + "/texture_bl.png", prefix + "/bl.csv");
+        input + "/texture_bl.png", input + "/bl.csv");
     if (ext3.exposure_flag && ext3.ncoef > 0.5)
     {
         opt.ncoef_bl = ext3.ncoef;
@@ -721,13 +689,13 @@ int main()
                    exposure_flag_br, size);
     if (add_semantic_segmentation_right)
     {
-        Mat mask_br = imread(prefix + "/mask/road_mask_right.png");
+        Mat mask_br = imread(input + "/mask/road_mask_right.png");
         ext4.mask_ground.push_back(mask_br);
     }
     ext4.Binarization();
     ext4.findcontours();
     opt.br_pixels_texture = ext4.extrac_textures_and_save(
-        prefix + "/texture_br.png", prefix + "/br.csv");
+        input + "/texture_br.png", input + "/br.csv");
     // opt.br_pixels_texture=opt.readfromcsv(prefix+"/br.csv");
     if (ext4.exposure_flag && ext4.ncoef > 0.5)
     {
@@ -762,5 +730,5 @@ int main()
     cout << "total calibration time:" << during1 + during2 + during3 << "s"
          << endl;
 
-    opt.SaveOptResult(prefix + "/after_all_calib");
+    opt.SaveOptResult(output + "/after_all_calib");
 }
