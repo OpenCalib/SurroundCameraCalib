@@ -3,6 +3,7 @@
 #include <random>
 #include "camera_params_loader.h"
 #include "transform_util.h"
+// #include "utils.h"
 
 Mat Optimizer::eigen2mat(Eigen::MatrixXd A)
 {
@@ -106,44 +107,46 @@ Mat Optimizer::Binarization(Mat img1, Mat img2)
     // waitKey(0);
 }
 
-Mat Optimizer::tail(Mat img, string index)
+Mat Optimizer::tail(Mat img, CamID camId)
 {
-    if (index == "f")
+    if (camId == CamID::F)
     {
-        Rect m_select_f     = Rect(0, 0, img.cols, sizef);
+        Rect m_select_f     = Rect(0, 0, img.cols, tailSize[CamID::F]);
         Mat cropped_image_f = img(m_select_f);
-        Mat border(img.rows - sizef, img.cols, cropped_image_f.type(),
-                   Scalar(0, 0, 0));
+        Mat border(img.rows - tailSize[CamID::F], img.cols,
+                   cropped_image_f.type(), Scalar(0, 0, 0));
         Mat dst_front;
         vconcat(cropped_image_f, border, dst_front);
         return dst_front;
     }
-    else if (index == "l")
+    else if (camId == CamID::L)
     {
-        Rect m_select_l     = Rect(0, 0, sizel, img.rows);
+        Rect m_select_l     = Rect(0, 0, tailSize[CamID::L], img.rows);
         Mat cropped_image_l = img(m_select_l);
-        Mat border2(img.rows, img.cols - sizel, cropped_image_l.type(),
-                    Scalar(0, 0, 0));
+        Mat border2(img.rows, img.cols - tailSize[CamID::L],
+                    cropped_image_l.type(), Scalar(0, 0, 0));
         Mat dst_left;
         hconcat(cropped_image_l, border2, dst_left);
         return dst_left;
     }
-    else if (index == "b")
+    else if (camId == CamID::B)
     {
-        Rect m_select_b     = Rect(0, img.rows - sizeb, img.cols, sizeb);
+        Rect m_select_b     = Rect(0, img.rows - tailSize[CamID::B], img.cols,
+                                   tailSize[CamID::B]);
         Mat cropped_image_b = img(m_select_b);
-        Mat border1(img.rows - sizeb, img.cols, cropped_image_b.type(),
-                    Scalar(0, 0, 0));
+        Mat border1(img.rows - tailSize[CamID::B], img.cols,
+                    cropped_image_b.type(), Scalar(0, 0, 0));
         Mat dst_behind;
         vconcat(border1, cropped_image_b, dst_behind);
         return dst_behind;
     }
-    else if (index == "r")
+    else if (camId == CamID::R)
     {
-        Rect m_select_r     = Rect(img.cols - sizer, 0, sizer, img.rows);
+        Rect m_select_r     = Rect(img.cols - tailSize[CamID::R], 0,
+                                   tailSize[CamID::R], img.rows);
         Mat cropped_image_r = img(m_select_r);
-        Mat border3(img.rows, img.cols - sizer, cropped_image_r.type(),
-                    Scalar(0, 0, 0));
+        Mat border3(img.rows, img.cols - tailSize[CamID::R],
+                    cropped_image_r.type(), Scalar(0, 0, 0));
         Mat dst_right;
         hconcat(border3, cropped_image_r, dst_right);
         return dst_right;
@@ -155,13 +158,13 @@ void Optimizer::SaveOptResult(const string filename)
 {
     // do not tail imgs
     // Mat
-    // imgf_bev_rgb_=project_on_ground(imgf_rgb,extrinsic_front_opt,intrinsic_front,distortion_params_front,KG,brows,bcols,hb);
+    // imgf_bev_rgb_=project_on_ground(imgf_rgb,optExt[CamID::F],intrinsic_front,distortion_params_front,KG,brows,bcols,hb);
     // Mat
-    // imgl_bev_rgb_=project_on_ground(imgl_rgb,extrinsic_left_opt,intrinsic_left,distortion_params_left,KG,brows,bcols,hl);
+    // imgl_bev_rgb_=project_on_ground(imgl_rgb,optExt[CamID::L],intrinsic_left,distortion_params_left,KG,brows,bcols,hl);
     // Mat
-    // imgr_bev_rgb_=project_on_ground(imgr_rgb,extrinsic_right_opt,intrinsic_right,distortion_params_right,KG,brows,bcols,hr);
+    // imgr_bev_rgb_=project_on_ground(imgr_rgb,optExt[CamID::R],intrinsic_right,distortion_params_right,KG,brows,bcols,hr);
     // Mat
-    // imgb_bev_rgb_=project_on_ground(imgb_rgb,extrinsic_behind_opt,intrinsic_behind,distortion_params_behind,KG,brows,bcols,hb);
+    // imgb_bev_rgb_=project_on_ground(imgb_rgb,optExt[CamID::B],intrinsic_behind,distortion_params_behind,KG,brows,bcols,hb);
 
     //
     Mat opt_after  = generate_surround_view(imgf_bev_rgb, imgl_bev_rgb,
@@ -174,13 +177,13 @@ void Optimizer::SaveOptResult(const string filename)
     // waitKey(0);
 }
 
-void Optimizer::show(string idx, string filename)
+void Optimizer::show(CamID camId, string filename)
 {
     Mat dst, dst1;
 
-    if (idx == "right")
+    if (camId == CamID::R)
     {  // first
-        if (fixed == "front")
+        if (fixed == CamID::F)
             addWeighted(imgf_bev_rgb, 0.5, imgr_bev_rgb, 0.5, 3, dst);
         else
             addWeighted(imgb_bev_rgb, 0.5, imgr_bev_rgb, 0.5, 3, dst);
@@ -188,7 +191,7 @@ void Optimizer::show(string idx, string filename)
         // waitKey(0);
         imwrite(filename, dst);
     }
-    if (idx == "behind")
+    if (camId == CamID::B)
     {  // second
         addWeighted(imgb_bev_rgb, 0.5, imgr_bev_rgb, 0.5, 3, dst);
         addWeighted(dst, 1, imgl_bev_rgb, 0.5, 3, dst1);
@@ -196,9 +199,9 @@ void Optimizer::show(string idx, string filename)
         // waitKey(0);
         imwrite(filename, dst1);
     }
-    if (idx == "left")
+    if (camId == CamID::L)
     {  // third
-        if (fixed == "front")
+        if (fixed == CamID::F)
             addWeighted(imgl_bev_rgb, 0.5, imgf_bev_rgb, 0.5, 3, dst1);
         else
             addWeighted(imgl_bev_rgb, 0.5, imgb_bev_rgb, 0.5, 3, dst1);
@@ -206,7 +209,7 @@ void Optimizer::show(string idx, string filename)
         // waitKey(0);
         imwrite(filename, dst1);
     }
-    if (idx == "front")
+    if (camId == CamID::F)
     {
         addWeighted(imgf_bev_rgb, 0.5, imgr_bev_rgb, 0.5, 3, dst);
         addWeighted(dst, 1, imgl_bev_rgb, 0.5, 3, dst1);
@@ -523,7 +526,7 @@ void Optimizer::initializePose()
 
     if (flag_add_disturbance)
     {
-        if (fixed == "back")
+        if (fixed == CamID::B)
         {
             Eigen::Matrix4d front_disturbance;
             Eigen::Matrix3d front_disturbance_rot_mat;
@@ -568,7 +571,7 @@ void Optimizer::initializePose()
             right_disturbance_t);
         T_RG *= right_disturbance;
 
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Eigen::Matrix4d behind_disturbance;
             Eigen::Matrix3d behind_disturbance_rot_mat;
@@ -588,26 +591,26 @@ void Optimizer::initializePose()
         }
     }
 
-    extrinsic_front  = T_FG;
-    extrinsic_left   = T_LG;
-    extrinsic_behind = T_BG;
-    extrinsic_right  = T_RG;
+    initExt[CamID::F] = T_FG;
+    initExt[CamID::L] = T_LG;
+    initExt[CamID::B] = T_BG;
+    initExt[CamID::R] = T_RG;
 
-    cout << "extrinsic_front:" << endl << extrinsic_front << endl;
+    cout << "initExt[CamID::F]:" << endl << initExt[CamID::F] << endl;
     cout << "euler:" << endl
-         << TransformUtil::Rotation2Eul(extrinsic_front.block(0, 0, 3, 3))
+         << TransformUtil::Rotation2Eul(initExt[CamID::F].block(0, 0, 3, 3))
          << endl;
-    cout << "extrinsic_left:" << endl << extrinsic_left << endl;
+    cout << "initExt[CamID::L]:" << endl << initExt[CamID::L] << endl;
     cout << "euler:" << endl
-         << TransformUtil::Rotation2Eul(extrinsic_left.block(0, 0, 3, 3))
+         << TransformUtil::Rotation2Eul(initExt[CamID::L].block(0, 0, 3, 3))
          << endl;
-    cout << "extrinsic_right:" << endl << extrinsic_right << endl;
+    cout << "initExt[CamID::R]:" << endl << initExt[CamID::R] << endl;
     cout << "euler:" << endl
-         << TransformUtil::Rotation2Eul(extrinsic_right.block(0, 0, 3, 3))
+         << TransformUtil::Rotation2Eul(initExt[CamID::R].block(0, 0, 3, 3))
          << endl;
-    cout << "extrinsic_behind:" << endl << extrinsic_behind << endl;
+    cout << "initExt[CamID::B]:" << endl << initExt[CamID::B] << endl;
     cout << "euler:" << endl
-         << TransformUtil::Rotation2Eul(extrinsic_behind.block(0, 0, 3, 3))
+         << TransformUtil::Rotation2Eul(initExt[CamID::B].block(0, 0, 3, 3))
          << endl;
     return;
 }
@@ -690,40 +693,40 @@ void Optimizer::initializetailsize()
 {
     if (data_index == "imgs3" || data_index == "imgs4" || data_index == "imgs5")
     {
-        sizef = 450;
-        sizel = 450;
-        sizeb = 350;
-        sizer = 450;
+        tailSize[CamID::F] = 450;
+        tailSize[CamID::L] = 450;
+        tailSize[CamID::B] = 350;
+        tailSize[CamID::R] = 450;
     }
 
     if (data_index == "imgs1" || data_index == "imgs2")
     {
-        sizef = 330;
-        sizel = 460;
-        sizeb = 330;
-        sizer = 460;
+        tailSize[CamID::F] = 330;
+        tailSize[CamID::L] = 460;
+        tailSize[CamID::B] = 330;
+        tailSize[CamID::R] = 460;
     }
 
     if (data_index == "custom")
     {
-        sizef = 330;
-        sizel = 460;
-        sizeb = 330;
-        sizer = 460;
+        tailSize[CamID::F] = 330;
+        tailSize[CamID::L] = 460;
+        tailSize[CamID::B] = 330;
+        tailSize[CamID::R] = 460;
     }
 
     if (data_index == "imgs6")
     {
-        sizef = 250;
-        sizel = 350;
-        sizeb = 150;
-        sizer = 380;
+        tailSize[CamID::F] = 250;
+        tailSize[CamID::L] = 350;
+        tailSize[CamID::B] = 150;
+        tailSize[CamID::R] = 380;
     }
 }
 
 Optimizer::Optimizer(const std::string &calibPath, const Mat *imgf,
                      const Mat *imgl, const Mat *imgb, const Mat *imgr,
-                     int camera_model_index, int rows, int cols, string fixed_,
+                     int camera_model_index, int rows, int cols, CamID fixed_,
                      int flag, string data_set, int _flag_add_disturbance,
                      string prefix_, string solution_model_ = "atb+gray")
     : calibPath_(calibPath)
@@ -772,35 +775,35 @@ Optimizer::Optimizer(const std::string &calibPath, const Mat *imgf,
 
     coarse_flag = flag;
 
-    if (fixed == "front")
+    if (fixed == CamID::F)
     {
         imgf_bev_gray =
-            project_on_ground(imgf_gray, extrinsic_front, intrinsic_front,
+            project_on_ground(imgf_gray, initExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_atb =
-            project_on_ground(imgf_gray, extrinsic_front, intrinsic_front,
+            project_on_ground(imgf_gray, initExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, extrinsic_front, intrinsic_front,
+            project_on_ground(imgf_rgb, initExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
-        imgf_bev_gray = tail(imgf_bev_gray, "f");
-        imgf_bev_atb  = tail(imgf_bev_atb, "f");
-        imgf_bev_rgb  = tail(imgf_bev_rgb, "f");
+        imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
+        imgf_bev_atb  = tail(imgf_bev_atb, CamID::F);
+        imgf_bev_rgb  = tail(imgf_bev_rgb, CamID::F);
     }
     else
     {
         imgb_bev_gray =
-            project_on_ground(imgb_gray, extrinsic_behind, intrinsic_behind,
+            project_on_ground(imgb_gray, initExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_rgb, extrinsic_behind, intrinsic_behind,
+            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, extrinsic_behind, intrinsic_behind,
+            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
-        imgb_bev_gray = tail(imgb_bev_gray, "b");
-        imgb_bev_atb  = tail(imgb_bev_atb, "b");
-        imgb_bev_rgb  = tail(imgb_bev_rgb, "b");
+        imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
+        imgb_bev_atb  = tail(imgb_bev_atb, CamID::B);
+        imgb_bev_rgb  = tail(imgb_bev_rgb, CamID::B);
     }
 }
 
@@ -921,16 +924,16 @@ Mat Optimizer::generate_surround_viewX(cv::Mat img_GF, cv::Mat img_GL,
     return img_G;
 }
 
-double Optimizer::CostFunction(const vector<double> var, string idx,
+double Optimizer::CostFunction(const vector<double> var, CamID camId,
                                Eigen::Matrix4d T)
 {
     double loss;
-    if (idx == "right")
+    if (camId == CamID::R)
     {
         Eigen::Matrix4d Tr     = T;
         Eigen::Matrix4d deltaT = TransformUtil::GetDeltaT(var);
         Tr *= deltaT;
-        if (fixed == "front")
+        if (fixed == CamID::F)
             loss = back_camera_and_compute_loss(imgf_bev_gray, imgf_bev_atb,
                                                 imgr_gray, imgr_atb, Tr, "fr");
         else  // fixed back,so rear bev pixels back projected to right camera
@@ -938,12 +941,12 @@ double Optimizer::CostFunction(const vector<double> var, string idx,
                                                 imgr_gray, imgr_atb, Tr, "br");
         return loss;
     }
-    else if (idx == "left")
+    else if (camId == CamID::L)
     {
         Eigen::Matrix4d Tl     = T;
         Eigen::Matrix4d deltaT = TransformUtil::GetDeltaT(var);
         Tl *= deltaT;
-        if (fixed == "front")
+        if (fixed == CamID::F)
             loss = back_camera_and_compute_loss(imgf_bev_gray, imgf_bev_atb,
                                                 imgl_gray, imgl_atb, Tl, "fl");
         else  // fixed back,so rear bev pixels back projected to left camera
@@ -954,7 +957,7 @@ double Optimizer::CostFunction(const vector<double> var, string idx,
     else
     {  // behind(fist_order="front") or front(fist_order="behind")
         Eigen::Matrix4d deltaT = TransformUtil::GetDeltaT(var);
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Eigen::Matrix4d Tb = T;
             Tb *= deltaT;
@@ -1103,7 +1106,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
         double y  = pG.at<double>(1, i);
         double x1 = pG2C.at<Vec2d>(0, i)[0];
         double y1 = pG2C.at<Vec2d>(0, i)[1];
-        // cout<<x1<<" "<<y1<<endl;
+        // cout<<x1<< " " <<y1<<endl;
         if (x1 > 0 && y1 > 0 && x1 < img2_gray.cols && y1 < img2_gray.rows)
         {
             if (solution_model == "atb+gray")
@@ -1158,7 +1161,7 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
                                      double yaw_ep1, double t0_ep0,
                                      double t0_ep1, double t1_ep0,
                                      double t1_ep1, double t2_ep0,
-                                     double t2_ep1, string idx)
+                                     double t2_ep1, CamID camId)
 {
     vector<double> var(6, 0.0);
     double resolution_r = 100;  // resolution_r could be customized to get
@@ -1191,74 +1194,74 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
         var[5] = double(distribution_z(generator)) / resolution_t;
         mutexval.unlock();
 
-        if (idx == "left")
+        if (camId == CamID::L)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_left);
+            double loss_new = CostFunction(var, camId, initExt[CamID::L]);
             if (loss_new < cur_left_loss)
             {
                 lock_guard<std::mutex> lock(mutexleft);
                 cur_left_loss = loss_new;
-                extrinsic_left_opt =
-                    extrinsic_left * TransformUtil::GetDeltaT(var);
+                optExt[CamID::L] =
+                    initExt[CamID::L] * TransformUtil::GetDeltaT(var);
                 bestVal_[0] = var;
             }
         }
-        if (idx == "right")
+        if (camId == CamID::R)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_right);
+            double loss_new = CostFunction(var, camId, initExt[CamID::R]);
             if (loss_new < cur_right_loss)
             {
                 lock_guard<std::mutex> lock(mutexright);
                 cur_right_loss = loss_new;
-                extrinsic_right_opt =
-                    extrinsic_right * TransformUtil::GetDeltaT(var);
+                optExt[CamID::R] =
+                    initExt[CamID::R] * TransformUtil::GetDeltaT(var);
                 bestVal_[1] = var;
             }
         }
-        if (idx == "behind")
+        if (camId == CamID::B)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_behind);
+            double loss_new = CostFunction(var, camId, initExt[CamID::B]);
             if (loss_new < cur_behind_loss)
             {
                 lock_guard<std::mutex> lock(mutexbehind);
                 cur_behind_loss = loss_new;
-                extrinsic_behind_opt =
-                    extrinsic_behind * TransformUtil::GetDeltaT(var);
+                optExt[CamID::B] =
+                    initExt[CamID::B] * TransformUtil::GetDeltaT(var);
                 bestVal_[2] = var;
             }
         }
-        if (idx == "front")
+        if (camId == CamID::F)
         {  // if fix back camera,front camera is calibrated at last
-            double loss_new = CostFunction(var, idx, extrinsic_front);
+            double loss_new = CostFunction(var, camId, initExt[CamID::F]);
             if (loss_new < cur_front_loss)
             {
                 lock_guard<std::mutex> lock(mutexfront);
                 cur_front_loss = loss_new;
-                extrinsic_front_opt =
-                    extrinsic_front * TransformUtil::GetDeltaT(var);
+                optExt[CamID::F] =
+                    initExt[CamID::F] * TransformUtil::GetDeltaT(var);
                 bestVal_[2] = var;
             }
         }
     }
 
-    if (idx == "left")
+    if (camId == CamID::L)
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
 
-        imgl_bev_gray = tail(imgl_bev_gray, "l");
-        imgl_bev_rgb  = tail(imgl_bev_rgb, "l");
-        imgl_bev_atb  = tail(imgl_bev_atb, "l");
+        imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
+        imgl_bev_rgb  = tail(imgl_bev_rgb, CamID::L);
+        imgl_bev_atb  = tail(imgl_bev_atb, CamID::L);
 
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Mat mask = Binarization(imgf_bev_rgb, imgl_bev_rgb);
             Mat ROI1, ROI2;
@@ -1287,24 +1290,24 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
             ncoef_bl     = mean1 / mean2;
         }
     }
-    else if (idx == "right")
+    else if (camId == CamID::R)
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
 
-        imgr_bev_gray = tail(imgr_bev_gray, "r");
-        imgr_bev_rgb  = tail(imgr_bev_rgb, "r");
-        imgr_bev_atb  = tail(imgr_bev_atb, "r");
+        imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
+        imgr_bev_rgb  = tail(imgr_bev_rgb, CamID::R);
+        imgr_bev_atb  = tail(imgr_bev_atb, CamID::R);
 
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Mat mask = Binarization(imgf_bev_rgb, imgr_bev_rgb);
             Mat ROI1, ROI2;
@@ -1333,22 +1336,22 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
             ncoef_br     = mean1 / mean2;
         }
     }
-    else if (idx == "behind")
+    else if (camId == CamID::B)
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
 
-        imgb_bev_gray = tail(imgb_bev_gray, "b");
-        imgb_bev_rgb  = tail(imgb_bev_rgb, "b");
-        imgb_bev_atb  = tail(imgb_bev_atb, "b");
+        imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
+        imgb_bev_rgb  = tail(imgb_bev_rgb, CamID::B);
+        imgb_bev_atb  = tail(imgb_bev_atb, CamID::B);
 
         Mat mask1 = Binarization(imgl_bev_rgb, imgb_bev_rgb);
         Mat ROI1, ROI2;
@@ -1378,18 +1381,18 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
 
-        imgf_bev_gray = tail(imgf_bev_gray, "f");
-        imgf_bev_rgb  = tail(imgf_bev_rgb, "f");
-        imgf_bev_atb  = tail(imgf_bev_atb, "f");
+        imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
+        imgf_bev_rgb  = tail(imgf_bev_rgb, CamID::F);
+        imgf_bev_atb  = tail(imgf_bev_atb, CamID::F);
 
         Mat mask1 = Binarization(imgl_bev_rgb, imgf_bev_rgb);
         Mat ROI1, ROI2;
@@ -1423,7 +1426,7 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
                                           double yaw_ep1, double t0_ep0,
                                           double t0_ep1, double t1_ep0,
                                           double t1_ep1, double t2_ep0,
-                                          double t2_ep1, string idx)
+                                          double t2_ep1, CamID camId)
 {
     vector<double> var(6, 0.0);
     double resolution_r = 200;  // resolution_r could be customized to get
@@ -1474,60 +1477,60 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
         // var[5] = distribution_z(generator);
         mutexval.unlock();
 
-        if (idx == "left")
+        if (camId == CamID::L)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_left_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::L]);
             if (loss_new < cur_left_loss)
             {
                 lock_guard<std::mutex> lock(mutexleft);
                 cur_left_loss = loss_new;
-                extrinsic_left_opt =
-                    extrinsic_left_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::L] =
+                    optExt[CamID::L] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[0][i] += var[i];
                 }
             }
         }
-        if (idx == "right")
+        if (camId == CamID::R)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_right_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::R]);
             if (loss_new < cur_right_loss)
             {
                 lock_guard<std::mutex> lock(mutexright);
                 cur_right_loss = loss_new;
-                extrinsic_right_opt =
-                    extrinsic_right_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::R] =
+                    optExt[CamID::R] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[1][i] += var[i];
                 }
             }
         }
-        if (idx == "behind")
+        if (camId == CamID::B)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_behind_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::B]);
             if (loss_new < cur_behind_loss)
             {
                 lock_guard<std::mutex> lock(mutexbehind);
                 cur_behind_loss = loss_new;
-                extrinsic_behind_opt =
-                    extrinsic_behind_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::B] =
+                    optExt[CamID::B] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[2][i] += var[i];
                 }
             }
         }
-        if (idx == "front")
+        if (camId == CamID::F)
         {  // if fix back camera,front camera is calibrated at last
-            double loss_new = CostFunction(var, idx, extrinsic_front_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::F]);
             if (loss_new < cur_front_loss)
             {
                 lock_guard<std::mutex> lock(mutexfront);
                 cur_front_loss = loss_new;
-                extrinsic_front_opt =
-                    extrinsic_front_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::F] =
+                    optExt[CamID::F] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[2][i] += var[i];
@@ -1536,24 +1539,24 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
         }
     }
 
-    if (idx == "left")
+    if (camId == CamID::L)
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
 
-        imgl_bev_gray = tail(imgl_bev_gray, "l");
-        imgl_bev_rgb  = tail(imgl_bev_rgb, "l");
-        imgl_bev_atb  = tail(imgl_bev_atb, "l");
+        imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
+        imgl_bev_rgb  = tail(imgl_bev_rgb, CamID::L);
+        imgl_bev_atb  = tail(imgl_bev_atb, CamID::L);
 
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Mat mask = Binarization(imgf_bev_rgb, imgl_bev_rgb);
             Mat ROI1, ROI2;
@@ -1582,24 +1585,24 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
             ncoef_bl     = mean1 / mean2;
         }
     }
-    else if (idx == "right")
+    else if (camId == CamID::R)
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
 
-        imgr_bev_gray = tail(imgr_bev_gray, "r");
-        imgr_bev_rgb  = tail(imgr_bev_rgb, "r");
-        imgr_bev_atb  = tail(imgr_bev_atb, "r");
+        imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
+        imgr_bev_rgb  = tail(imgr_bev_rgb, CamID::R);
+        imgr_bev_atb  = tail(imgr_bev_atb, CamID::R);
 
-        if (fixed == "front")
+        if (fixed == CamID::F)
         {
             Mat mask = Binarization(imgf_bev_rgb, imgr_bev_rgb);
             Mat ROI1, ROI2;
@@ -1628,22 +1631,22 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
             ncoef_br     = mean1 / mean2;
         }
     }
-    else if (idx == "behind")
+    else if (camId == CamID::B)
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
 
-        imgb_bev_gray = tail(imgb_bev_gray, "b");
-        imgb_bev_rgb  = tail(imgb_bev_rgb, "b");
-        imgb_bev_atb  = tail(imgb_bev_atb, "b");
+        imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
+        imgb_bev_rgb  = tail(imgb_bev_rgb, CamID::B);
+        imgb_bev_atb  = tail(imgb_bev_atb, CamID::B);
 
         Mat mask1 = Binarization(imgl_bev_rgb, imgb_bev_rgb);
         Mat ROI1, ROI2;
@@ -1673,18 +1676,18 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
 
-        imgf_bev_gray = tail(imgf_bev_gray, "f");
-        imgf_bev_rgb  = tail(imgf_bev_rgb, "f");
-        imgf_bev_atb  = tail(imgf_bev_atb, "f");
+        imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
+        imgf_bev_rgb  = tail(imgf_bev_rgb, CamID::F);
+        imgf_bev_atb  = tail(imgf_bev_atb, CamID::F);
 
         Mat mask1 = Binarization(imgl_bev_rgb, imgf_bev_rgb);
         Mat ROI1, ROI2;
@@ -1718,7 +1721,7 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
                                           double yaw_ep1, double t0_ep0,
                                           double t0_ep1, double t1_ep0,
                                           double t1_ep1, double t2_ep0,
-                                          double t2_ep1, string idx)
+                                          double t2_ep1, CamID camId)
 {
     vector<double> var(6, 0.0);
     // double resolution_r=200;
@@ -1746,60 +1749,60 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
         var[5] = distribution_z(generator);
         mutexval.unlock();
 
-        if (idx == "left")
+        if (camId == CamID::L)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_left_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::L]);
             if (loss_new < cur_left_loss)
             {
                 lock_guard<std::mutex> lock(mutexleft);
                 cur_left_loss = loss_new;
-                extrinsic_left_opt =
-                    extrinsic_left_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::L] =
+                    optExt[CamID::L] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[0][i] += var[i];
                 }
             }
         }
-        if (idx == "right")
+        if (camId == CamID::R)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_right_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::R]);
             if (loss_new < cur_right_loss)
             {
                 lock_guard<std::mutex> lock(mutexright);
                 cur_right_loss = loss_new;
-                extrinsic_right_opt =
-                    extrinsic_right_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::R] =
+                    optExt[CamID::R] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[1][i] += var[i];
                 }
             }
         }
-        if (idx == "behind")
+        if (camId == CamID::B)
         {
-            double loss_new = CostFunction(var, idx, extrinsic_behind_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::B]);
             if (loss_new < cur_behind_loss)
             {
                 lock_guard<std::mutex> lock(mutexbehind);
                 cur_behind_loss = loss_new;
-                extrinsic_behind_opt =
-                    extrinsic_behind_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::B] =
+                    optExt[CamID::B] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[2][i] += var[i];
                 }
             }
         }
-        if (idx == "front")
+        if (camId == CamID::F)
         {  // if fix back camera,front camera is calibrated at last
-            double loss_new = CostFunction(var, idx, extrinsic_front_opt);
+            double loss_new = CostFunction(var, camId, optExt[CamID::F]);
             if (loss_new < cur_front_loss)
             {
                 lock_guard<std::mutex> lock(mutexfront);
                 cur_front_loss = loss_new;
-                extrinsic_front_opt =
-                    extrinsic_front_opt * TransformUtil::GetDeltaT(var);
+                optExt[CamID::F] =
+                    optExt[CamID::F] * TransformUtil::GetDeltaT(var);
                 for (int i = 0; i < 6; i++)
                 {
                     bestVal_[2][i] += var[i];
@@ -1808,72 +1811,73 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
         }
     }
 
-    if (idx == "left")
+    if (camId == CamID::L)
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, extrinsic_left_opt, intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
                               distortion_params_left, KG, brows, bcols, hl);
 
-        imgl_bev_gray = tail(imgl_bev_gray, "l");
-        imgl_bev_rgb  = tail(imgl_bev_rgb, "l");
-        imgl_bev_atb  = tail(imgl_bev_atb, "l");
+        imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
+        imgl_bev_rgb  = tail(imgl_bev_rgb, CamID::L);
+        imgl_bev_atb  = tail(imgl_bev_atb, CamID::L);
     }
-    else if (idx == "right")
+    else if (camId == CamID::R)
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, extrinsic_right_opt, intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
                               distortion_params_right, KG, brows, bcols, hr);
 
-        imgr_bev_gray = tail(imgr_bev_gray, "r");
-        imgr_bev_rgb  = tail(imgr_bev_rgb, "r");
-        imgr_bev_atb  = tail(imgr_bev_atb, "r");
+        imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
+        imgr_bev_rgb  = tail(imgr_bev_rgb, CamID::R);
+        imgr_bev_atb  = tail(imgr_bev_atb, CamID::R);
     }
-    else if (idx == "behind")
+    else if (camId == CamID::B)
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, extrinsic_behind_opt, intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
                               distortion_params_behind, KG, brows, bcols, hb);
 
-        imgb_bev_gray = tail(imgb_bev_gray, "b");
-        imgb_bev_rgb  = tail(imgb_bev_rgb, "b");
-        imgb_bev_atb  = tail(imgb_bev_atb, "b");
+        imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
+        imgb_bev_rgb  = tail(imgb_bev_rgb, CamID::B);
+        imgb_bev_atb  = tail(imgb_bev_atb, CamID::B);
     }
     else
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, extrinsic_front_opt, intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
                               distortion_params_front, KG, brows, bcols, hb);
 
-        imgf_bev_gray = tail(imgf_bev_gray, "f");
-        imgf_bev_rgb  = tail(imgf_bev_rgb, "f");
-        imgf_bev_atb  = tail(imgf_bev_atb, "f");
+        imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
+        imgf_bev_rgb  = tail(imgf_bev_rgb, CamID::F);
+        cv::imwrite(prefix + "/home/kiennt63/test.png", imgf_bev_rgb);
+        imgf_bev_atb = tail(imgf_bev_atb, CamID::F);
     }
 }

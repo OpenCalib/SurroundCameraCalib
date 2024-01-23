@@ -10,6 +10,14 @@
 using namespace cv;
 using namespace std;
 
+enum CamID : size_t
+{
+    F = 0,
+    L,
+    B,
+    R
+};
+
 class Optimizer
 {
 private:
@@ -39,7 +47,7 @@ public:
     int camera_model;
 
     // which camera fixed
-    string fixed;
+    CamID fixed;
 
     // if add coarse search(1st search)
     int coarse_flag;
@@ -60,17 +68,8 @@ public:
     // K_G
     Eigen::Matrix3d KG;
 
-    // initial SVS cameras extrinsics-T(SVS cameras->BEV)
-    Eigen::Matrix4d extrinsic_front;
-    Eigen::Matrix4d extrinsic_left;
-    Eigen::Matrix4d extrinsic_behind;
-    Eigen::Matrix4d extrinsic_right;
-
-    // SVS cameras extrinsics-T after optimization
-    Eigen::Matrix4d extrinsic_front_opt;
-    Eigen::Matrix4d extrinsic_left_opt;
-    Eigen::Matrix4d extrinsic_behind_opt;
-    Eigen::Matrix4d extrinsic_right_opt;
+    std::array<Eigen::Matrix4d, 4> initExt;
+    std::array<Eigen::Matrix4d, 4> optExt;
 
     // distortion papameters
     vector<double> distortion_params_front;
@@ -82,7 +81,7 @@ public:
     double hf, hl, hb, hr;
 
     // tail size
-    double sizef, sizel, sizeb, sizer;
+    std::array<double, 4> tailSize;
 
     // SVS luminosity loss after optimization
     double cur_front_loss;
@@ -157,9 +156,9 @@ public:
     double ncoef_fl, ncoef_fr, ncoef_bl, ncoef_br;
 
     // Optimizer();
-    Optimizer(const std::string& calibPath, const Mat *imgf, const Mat *imgl, const Mat *imgb,
-              const Mat *imgr, int camera_model_index, int rows, int cols,
-              string first_order, int flag, string data_set,
+    Optimizer(const std::string &calibPath, const Mat *imgf, const Mat *imgl,
+              const Mat *imgb, const Mat *imgr, int camera_model_index,
+              int rows, int cols, CamID fixed_, int flag, string data_set,
               int flag_add_disturbance, string prefix, string solution_model_);
     ~Optimizer();
     void initializeK();
@@ -168,11 +167,11 @@ public:
     void initializeKG();
     void initializeHeight();
     void initializetailsize();
-    Mat tail(Mat img, string index);
-    double CostFunction(const vector<double> var, string idx,
+    Mat tail(Mat img, CamID camId);
+    double CostFunction(const vector<double> var, CamID camId,
                         Eigen::Matrix4d T);
     void SaveOptResult(const string img_name);
-    void show(string idx, string filename);
+    void show(CamID camId, string filename);
     Mat eigen2mat(Eigen::MatrixXd A);
     Mat gray_gamma(Mat img);
     Mat gray_atb(Mat img);
@@ -186,19 +185,19 @@ public:
                               double pitch_ep1, double yaw_ep0, double yaw_ep1,
                               double t0_ep0, double t0_ep1, double t1_ep0,
                               double t1_ep1, double t2_ep0, double t2_ep1,
-                              string idx);
+                              CamID camId);
     void fine_random_search_params(int search_count, double roll_ep0,
                                    double roll_ep1, double pitch_ep0,
                                    double pitch_ep1, double yaw_ep0,
                                    double yaw_ep1, double t0_ep0, double t0_ep1,
                                    double t1_ep0, double t1_ep1, double t2_ep0,
-                                   double t2_ep1, string idx);
+                                   double t2_ep1, CamID camId);
     void best_random_search_params(int search_count, double roll_ep0,
                                    double roll_ep1, double pitch_ep0,
                                    double pitch_ep1, double yaw_ep0,
                                    double yaw_ep1, double t0_ep0, double t0_ep1,
                                    double t1_ep0, double t1_ep1, double t2_ep0,
-                                   double t2_ep1, string idx);
+                                   double t2_ep1, CamID camId);
     Mat generate_surround_view(Mat img_GF, Mat img_GL, Mat img_GB, Mat img_GR);
     Mat generate_surround_viewX(Mat img_GF, Mat img_GL, Mat img_GB, Mat img_GR);
     vector<Point> readfromcsv(string filename);

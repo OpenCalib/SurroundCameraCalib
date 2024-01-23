@@ -20,5 +20,5 @@ target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
 add_executable(run_AVM_Calibration_F src/calibration_fixedF.cpp)
 target_link_libraries(run_AVM_Calibration_F ${PROJECT_NAME})
-add_executable(run_AVM_Calibration_B src/calibration_fixedB.cpp)
-target_link_libraries(run_AVM_Calibration_B ${PROJECT_NAME})
+# add_executable(run_AVM_Calibration_B src/calibration_fixedB.cpp)
+# target_link_libraries(run_AVM_Calibration_B ${PROJECT_NAME})

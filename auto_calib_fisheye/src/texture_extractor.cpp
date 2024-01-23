@@ -278,7 +278,7 @@ vector<pair<cv::Point, double>> extractor::extrac_textures_and_save(
 
     // cout<<"max_norm:"<<max_norm<<endl;
     // cout<<"min_norm:"<<min_norm<<endl;
-    // imwrite(pic_filename,show);
+    imwrite(pic_filename,show);
     // writetocsv(csv_filename,texture_down);
     return texture_down;
 }
