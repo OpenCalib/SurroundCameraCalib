@@ -22,6 +22,7 @@
 #include "optimizer.h"
 #include "texture_extractor.h"
 #include "transform_util.h"
+#include "utils.h"
 
 using namespace cv;
 using namespace std;
@@ -471,7 +472,7 @@ int main(int argc, char** argv)
     int camera_model = 0;
 
     // if add random disturbance to initial pose
-    int flag_add_disturbance = 1;
+    int flag_add_disturbance = 0;
 
     /*
     solution model :
@@ -482,7 +483,7 @@ int main(int argc, char** argv)
         3.pure Adpative Threshold Binarization in all three phase of
     optimization: solution_model_="atb"
     */
-    string solution_model_ = "atb+gray";
+    string solution_model_ = "atb";
 
     // if add road semantic segmentation when in texture extraction process to
     // improve accuracy
@@ -513,10 +514,14 @@ int main(int argc, char** argv)
     input     = argv[2];
     output    = argv[3];
     extension = ".png";
-    Mat imgb  = cv::imread(input + "/cam2" + extension);
-    Mat imgf  = cv::imread(input + "/cam1" + extension);
-    Mat imgl  = cv::imread(input + "/cam0" + extension);
-    Mat imgr  = cv::imread(input + "/cam3" + extension);
+    // Mat imgb  = cv::imread(input + "/cam2" + extension);
+    // Mat imgf  = cv::imread(input + "/cam1" + extension);
+    // Mat imgl  = cv::imread(input + "/cam0" + extension);
+    // Mat imgr  = cv::imread(input + "/cam3" + extension);
+    Mat imgb  = cv::imread(input + "/b" + extension);
+    Mat imgf  = cv::imread(input + "/f" + extension);
+    Mat imgl  = cv::imread(input + "/l" + extension);
+    Mat imgr  = cv::imread(input + "/r" + extension);
     std::filesystem::create_directories(output);
 
     // initilize the optimizer
@@ -724,6 +729,51 @@ int main(int argc, char** argv)
          << endl;
     cout << "total calibration time:" << during1 + during2 + during3 << "s"
          << endl;
+
+    printf("==================================================================="
+           "==\n");
+    std::cout << "GT Extrinsics:\n" << opt.gtExt[CamID::B] << "\n";
+    std::cout << "Opt Extrinsics:\n" << opt.optExt[CamID::B] << "\n";
+
+    printf("==================================================================="
+           "==\n");
+    std::array<std::pair<double, double>, 4> errors;
+    errors[CamID::F] =
+        util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
+    errors[CamID::L] =
+        util::calculateError(opt.initExt[CamID::L], opt.gtExt[CamID::L]);
+    errors[CamID::B] =
+        util::calculateError(opt.initExt[CamID::B], opt.gtExt[CamID::B]);
+    errors[CamID::R] =
+        util::calculateError(opt.initExt[CamID::R], opt.gtExt[CamID::R]);
+    printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::F].first, errors[CamID::F].second);
+    printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::L].first, errors[CamID::L].second);
+    printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::B].first, errors[CamID::B].second);
+    printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::R].first, errors[CamID::R].second);
+    printf("==================================================================="
+           "==\n");
+    errors[CamID::F] =
+        util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
+    errors[CamID::L] =
+        util::calculateError(opt.optExt[CamID::L], opt.gtExt[CamID::L]);
+    errors[CamID::B] =
+        util::calculateError(opt.optExt[CamID::B], opt.gtExt[CamID::B]);
+    errors[CamID::R] =
+        util::calculateError(opt.optExt[CamID::R], opt.gtExt[CamID::R]);
+    printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::F].first, errors[CamID::F].second);
+    printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::L].first, errors[CamID::L].second);
+    printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::B].first, errors[CamID::B].second);
+    printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::R].first, errors[CamID::R].second);
+    printf("==================================================================="
+           "==\n");
 
     opt.SaveOptResult(output + "/after_all_calib");
 }

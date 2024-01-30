@@ -3,7 +3,7 @@
 #include <random>
 #include "camera_params_loader.h"
 #include "transform_util.h"
-// #include "utils.h"
+#include "utils.h"
 
 Mat Optimizer::eigen2mat(Eigen::MatrixXd A)
 {
@@ -25,7 +25,6 @@ Mat Optimizer::gray_gamma(Mat img)
     {
         for (int j = 0; j < img.cols; j++)
         {
-            int g                = gray.at<uchar>(i, j);
             gray.at<uchar>(i, j) = saturate_cast<uchar>(
                 contrast * (gray.at<uchar>(i, j) - delta) + brightness);
         }
@@ -523,72 +522,14 @@ void Optimizer::initializePose()
             1.030495285987854, 0, 0, 0, 1;
         T_RG = (T_GC * T_CR).inverse();
     }
+    gtExt[CamID::F] = T_FG;
+    gtExt[CamID::L] = T_LG;
+    gtExt[CamID::B] = T_BG;
+    gtExt[CamID::R] = T_RG;
 
     if (flag_add_disturbance)
     {
-        if (fixed == CamID::B)
-        {
-            Eigen::Matrix4d front_disturbance;
-            Eigen::Matrix3d front_disturbance_rot_mat;
-            Vec3f front_disturbance_rot_euler;  // R(euler)
-            Mat_<double> front_disturbance_t =
-                (Mat_<double>(3, 1) << 0.007, 0.008, -0.0093);
-            front_disturbance_rot_euler << 0.89, 2.69, 1.05;
-            front_disturbance_rot_mat =
-                TransformUtil::eulerAnglesToRotationMatrix(
-                    front_disturbance_rot_euler);
-            front_disturbance = TransformUtil::R_T2RT(
-                TransformUtil::eigen2mat(front_disturbance_rot_mat),
-                front_disturbance_t);
-            T_FG *= front_disturbance;
-        }
-
-        Eigen::Matrix4d left_disturbance;
-        Eigen::Matrix3d left_disturbance_rot_mat;
-        Vec3f left_disturbance_rot_euler;  // R(euler)
-        // Mat_<double> left_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
-        Mat_<double> left_disturbance_t =
-            (Mat_<double>(3, 1) << 0.0095, 0.0025, -0.0086);
-        left_disturbance_rot_euler << 1.25, -1.25, 0.86;
-        left_disturbance_rot_mat = TransformUtil::eulerAnglesToRotationMatrix(
-            left_disturbance_rot_euler);
-        left_disturbance = TransformUtil::R_T2RT(
-            TransformUtil::eigen2mat(left_disturbance_rot_mat),
-            left_disturbance_t);
-        T_LG *= left_disturbance;
-
-        Eigen::Matrix4d right_disturbance;
-        Eigen::Matrix3d right_disturbance_rot_mat;
-        Vec3f right_disturbance_rot_euler;
-        // Mat_<double> right_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
-        Mat_<double> right_disturbance_t =
-            (Mat_<double>(3, 1) << 0.0065, -0.0075, 0.0095);
-        right_disturbance_rot_euler << 1.25, 0.95, -1.3;
-        right_disturbance_rot_mat = TransformUtil::eulerAnglesToRotationMatrix(
-            right_disturbance_rot_euler);
-        right_disturbance = TransformUtil::R_T2RT(
-            TransformUtil::eigen2mat(right_disturbance_rot_mat),
-            right_disturbance_t);
-        T_RG *= right_disturbance;
-
-        if (fixed == CamID::F)
-        {
-            Eigen::Matrix4d behind_disturbance;
-            Eigen::Matrix3d behind_disturbance_rot_mat;
-            Vec3f behind_disturbance_rot_euler;
-            Mat_<double> behind_disturbance_t = (Mat_<double>(3, 1) << 0, 0, 0);
-            // Mat_<double> behind_disturbance_t =
-            //     (Mat_<double>(3, 1) << -0.002, -0.0076, 0.0096);
-            // behind_disturbance_rot_euler << -1.25, 1.25, -1.1;
-            behind_disturbance_rot_euler << 0, 0, 0;
-            behind_disturbance_rot_mat =
-                TransformUtil::eulerAnglesToRotationMatrix(
-                    behind_disturbance_rot_euler);
-            behind_disturbance = TransformUtil::R_T2RT(
-                TransformUtil::eigen2mat(behind_disturbance_rot_mat),
-                behind_disturbance_t);
-            T_BG *= behind_disturbance;
-        }
+        util::addDisturbance(fixed, T_FG, T_LG, T_BG, T_RG);
     }
 
     initExt[CamID::F] = T_FG;
@@ -709,9 +650,9 @@ void Optimizer::initializetailsize()
 
     if (data_index == "custom")
     {
-        tailSize[CamID::F] = 330;
+        tailSize[CamID::F] = 300;
         tailSize[CamID::L] = 460;
-        tailSize[CamID::B] = 330;
+        tailSize[CamID::B] = 300;
         tailSize[CamID::R] = 460;
     }
 

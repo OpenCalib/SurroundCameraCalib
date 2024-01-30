@@ -68,6 +68,7 @@ public:
     // K_G
     Eigen::Matrix3d KG;
 
+    std::array<Eigen::Matrix4d, 4> gtExt;
     std::array<Eigen::Matrix4d, 4> initExt;
     std::array<Eigen::Matrix4d, 4> optExt;
 
