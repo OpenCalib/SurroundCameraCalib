@@ -1,0 +1,49 @@
+syntax = "proto2";
+
+message ImageProcessorConfig {
+  optional string frag_shader = 1 [default = "data/perception/calibs/simulation/BowlFragShader_16_18.fsh"];
+  optional string vert_shader = 2 [default = "data/perception/calibs/simulation/BowlVertShader_16_18.vsh"];
+  optional string seg_frag_shader = 3 [default = "data/perception/calibs/simulation/SegmentTopView.fsh"];
+  optional string seg_vert_shader = 4 [default = "data/perception/calibs/simulation/SegmentTopView.vsh"];
+  optional string model_name = 5 [default = "data/perception/calibs/simulation/Bowl_topview_ver1_16_18.obj"];
+  optional string texture_tv_image_0 = 6 [default = "data/perception/calibs/simulation/alpha_TV_0.png"];
+  optional string texture_tv_image_1 = 7 [default = "data/perception/calibs/simulation/alpha_TV_1.png"];
+  optional string texture_tv_image_2 = 8 [default = "data/perception/calibs/simulation/alpha_TV_2.png"];
+  optional string texture_tv_image_3 = 9 [default = "data/perception/calibs/simulation/alpha_TV_3.png"];
+  optional string calib_info_0 = 10 [default = "data/perception/calibs/simulation/calib_cam0_topview.txt"];
+  optional string calib_info_1 = 11 [default = "data/perception/calibs/simulation/calib_cam1_topview.txt"];
+  optional string calib_info_2 = 12 [default = "data/perception/calibs/simulation/calib_cam2_topview.txt"];
+  optional string calib_info_3 = 13 [default = "data/perception/calibs/simulation/calib_cam3_topview.txt"];
+  optional int64 min_diff_thresh = 14 [default = 10];
+  optional int32 queue_size = 15 [default = 5];
+  optional int32 cached_indices = 16 [default = 1];
+  optional string calib_dir = 17 [default = "data/perception/calibs/simulation/"];
+  optional bool cuda_enabled = 18 [default = false];
+}
+
+message SpaceDetectorConfig {
+  optional string model_path = 1 [default = "data/perception/model_weights/"];
+  optional string camera_json_data = 2 [default = "data/perception/calibs/simulation/cameraData.json"];
+  optional string alpha_front = 3 [default = "data/perception/calibs/simulation/alpha_1.png"];
+  optional string alpha_rear= 4 [default = "data/perception/calibs/simulation/alpha_2.png"];
+  optional string roi_mask_front= 5 [default = "data/perception/calibs/simulation/roi_mask_1.png"];
+  optional string roi_mask_rear= 6 [default = "data/perception/calibs/simulation/roi_mask_2.png"];
+  optional string roi_mask_left= 7 [default = "data/perception/calibs/simulation/roi_mask_0.png"];
+  optional string roi_mask_right= 8 [default = "data/perception/calibs/simulation/roi_mask_3.png"];
+}
+
+message USSHandlerConfig {
+  optional int32 num_topics = 1 [default = 12];
+  optional int64 min_diff_thresh = 2 [default = 10];
+  optional int32 queue_size = 3 [default = 5];
+  optional int32 cached_indices = 4 [default = 1];
+}
+
+message PerceptionConfig {
+  optional ImageProcessorConfig imgproc_config = 1;
+  optional SpaceDetectorConfig spdet_config = 2;
+  optional USSHandlerConfig usshandler_config = 3;
+  optional bool od_enabled = 4 [default = false];
+  optional bool uss_enabled = 5 [default = false];
+  optional bool od3d_enabled = 6 [default = false];
+}

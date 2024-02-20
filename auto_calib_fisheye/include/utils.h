@@ -56,7 +56,7 @@ inline void addDisturbance(CamID fixed, Eigen::Matrix4d& T_FG,
     // Mat_<double> left_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
     Mat_<double> left_disturbance_t =
         (Mat_<double>(3, 1) << 0.0095, 0.0025, -0.0086);
-    left_disturbance_rot_euler << 1.95, -1.25, 2.86;
+    left_disturbance_rot_euler << 1.95, -1.25, 1.86;
     left_disturbance_rot_mat =
         TransformUtil::eulerAnglesToRotationMatrix(left_disturbance_rot_euler);
     left_disturbance = TransformUtil::R_T2RT(
@@ -69,7 +69,7 @@ inline void addDisturbance(CamID fixed, Eigen::Matrix4d& T_FG,
     // Mat_<double> right_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
     Mat_<double> right_disturbance_t =
         (Mat_<double>(3, 1) << 0.0065, -0.0075, 0.0095);
-    right_disturbance_rot_euler << 2.95, 0.95, -1.8;
+    right_disturbance_rot_euler << 1.95, 0.95, -1.8;
     right_disturbance_rot_mat =
         TransformUtil::eulerAnglesToRotationMatrix(right_disturbance_rot_euler);
     right_disturbance = TransformUtil::R_T2RT(
@@ -77,7 +77,7 @@ inline void addDisturbance(CamID fixed, Eigen::Matrix4d& T_FG,
         right_disturbance_t);
     T_RG *= right_disturbance;
 
-    if (fixed == CamID::B)
+    if (fixed == CamID::F)
     {
         Eigen::Matrix4d behind_disturbance;
         Eigen::Matrix3d behind_disturbance_rot_mat;
@@ -85,7 +85,7 @@ inline void addDisturbance(CamID fixed, Eigen::Matrix4d& T_FG,
         // Mat_<double> behind_disturbance_t=(Mat_<double>(3, 1)<<0,0,0);
         Mat_<double> behind_disturbance_t =
             (Mat_<double>(3, 1) << -0.002, -0.0076, 0.0096);
-        behind_disturbance_rot_euler << -1.75, 2.95, -1.8;
+        behind_disturbance_rot_euler << -1.75, 1.95, -1.8;
         behind_disturbance_rot_mat = TransformUtil::eulerAnglesToRotationMatrix(
             behind_disturbance_rot_euler);
         behind_disturbance = TransformUtil::R_T2RT(

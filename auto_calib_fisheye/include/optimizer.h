@@ -6,6 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
+#include "image_processor_cuda.h"
 
 using namespace cv;
 using namespace std;
@@ -26,6 +27,7 @@ private:
     mutable std::mutex mutexright;
     mutable std::mutex mutexbehind;
     mutable std::mutex mutexval;
+    std::unique_ptr<perception::imgproc::IImageProcessor> imgproc_;
 
 public:
     // path to load initialize extrinsics

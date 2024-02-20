@@ -30,7 +30,7 @@ using namespace std;
 double during_bev;
 double during_compute_error;
 double during_wrap;
-string input, output, extension;
+string calib, input, output, extension;
 
 /*
 Deviable Hierarchical Search Optimization Based on Concurrent Mode,
@@ -463,7 +463,8 @@ int main(int argc, char** argv)
 {
     if (argc <= 3)
     {
-        printf("Usage %s <initial calibration> <image set dir> <output dir>\n",
+        printf("Usage %s <dataset> <initial calibration> <image set dir> "
+               "<output dir>\n",
                argv[0]);
         exit(-1);
     }
@@ -472,18 +473,18 @@ int main(int argc, char** argv)
     int camera_model = 0;
 
     // if add random disturbance to initial pose
-    int flag_add_disturbance = 0;
+    int flag_add_disturbance = 1;
 
     /*
     solution model :
         1.pure gray pipeline in three phase of optimization :
     solution_model_="gray" 2.(default)Adpative Threshold Binarization in first
     phase and pure gray in the 2nd&3rd phase of optimization:
-            solution_model_="gray+atb"
+            solution_model_="atb+gray"
         3.pure Adpative Threshold Binarization in all three phase of
     optimization: solution_model_="atb"
     */
-    string solution_model_ = "atb";
+    string solution_model_ = "atb+gray";
 
     // if add road semantic segmentation when in texture extraction process to
     // improve accuracy
@@ -509,23 +510,24 @@ int main(int argc, char** argv)
     // which camera fixed
     CamID fixed = CamID::F;
 
-    std::string dataset = "custom";
+    std::string dataset = argv[1];
 
-    input     = argv[2];
-    output    = argv[3];
+    calib     = argv[2];
+    input     = argv[3];
+    output    = argv[4];
     extension = ".png";
     // Mat imgb  = cv::imread(input + "/cam2" + extension);
     // Mat imgf  = cv::imread(input + "/cam1" + extension);
     // Mat imgl  = cv::imread(input + "/cam0" + extension);
     // Mat imgr  = cv::imread(input + "/cam3" + extension);
-    Mat imgb  = cv::imread(input + "/b" + extension);
-    Mat imgf  = cv::imread(input + "/f" + extension);
-    Mat imgl  = cv::imread(input + "/l" + extension);
-    Mat imgr  = cv::imread(input + "/r" + extension);
+    Mat imgb = cv::imread(input + "/b" + extension);
+    Mat imgf = cv::imread(input + "/f" + extension);
+    Mat imgl = cv::imread(input + "/l" + extension);
+    Mat imgr = cv::imread(input + "/r" + extension);
     std::filesystem::create_directories(output);
 
     // initilize the optimizer
-    Optimizer opt(argv[1], &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows,
+    Optimizer opt(calib, &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows,
                   bev_cols, fixed, coarse_search_flag, dataset,
                   flag_add_disturbance, output, solution_model_);
 
@@ -575,7 +577,7 @@ int main(int argc, char** argv)
                    size);
     if (add_semantic_segmentation_front)
     {
-        Mat mask_fl = imread(input + "/mask/road_mask_front.png");
+        Mat mask_fl = imread(input + "/mask/front.png");
         ext1.mask_ground.push_back(mask_fl);
     }
     ext1.Binarization();
@@ -610,7 +612,7 @@ int main(int argc, char** argv)
                    size);
     if (add_semantic_segmentation_front)
     {
-        Mat mask_fr = imread(input + "/mask/road_mask_front.png");
+        Mat mask_fr = imread(input + "/mask/front.png");
         ext2.mask_ground.push_back(mask_fr);
     }
     ext2.Binarization();
@@ -650,11 +652,13 @@ int main(int argc, char** argv)
 
     // back left field texture extraction
     int exposure_flag_bl = 1;  // if add exposure solution
+    cv::imwrite(output + "/GB.png", GB);
+    cv::imwrite(output + "/imgl_bev_rgb.png", opt.imgl_bev_rgb);
     extractor ext3(opt.imgl_bev_rgb, GB, add_semantic_segmentation_left,
                    exposure_flag_bl, size);
     if (add_semantic_segmentation_left)
     {
-        Mat mask_bl = imread(input + "/mask/road_mask_left.png");
+        Mat mask_bl = imread(input + "/mask/left.png");
         ext3.mask_ground.push_back(mask_bl);
     }
     ext3.Binarization();
@@ -685,11 +689,13 @@ int main(int argc, char** argv)
 
     // back right field texture extraction
     int exposure_flag_br = 1;  // if add exposure solution
+    cv::imwrite(output + "/GB.png", GB);
+    cv::imwrite(output + "/imgr_bev_rgb.png", opt.imgr_bev_rgb);
     extractor ext4(opt.imgr_bev_rgb, GB, add_semantic_segmentation_right,
                    exposure_flag_br, size);
     if (add_semantic_segmentation_right)
     {
-        Mat mask_br = imread(input + "/mask/road_mask_right.png");
+        Mat mask_br = imread(input + "/mask/right.png");
         ext4.mask_ground.push_back(mask_br);
     }
     ext4.Binarization();
@@ -737,6 +743,20 @@ int main(int argc, char** argv)
 
     printf("==================================================================="
            "==\n");
+
+    // Open a file for writing
+    std::ofstream outputFile(output + "/errors.txt");
+
+    // Check if the file is successfully opened
+    if (!outputFile.is_open())
+    {
+        std::cerr << "Error opening the file for writing." << std::endl;
+        return 1;  // Exit with an error code
+    }
+
+    outputFile << "CamID - Translation error - Rotation error" << std::endl;
+
+
     std::array<std::pair<double, double>, 4> errors;
     errors[CamID::F] =
         util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
@@ -754,6 +774,12 @@ int main(int argc, char** argv)
            errors[CamID::B].first, errors[CamID::B].second);
     printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
            errors[CamID::R].first, errors[CamID::R].second);
+
+    outputFile << "Before error" << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " " << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " " << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " " << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " " << errors[CamID::R].second << std::endl;
     printf("==================================================================="
            "==\n");
     errors[CamID::F] =
@@ -772,8 +798,18 @@ int main(int argc, char** argv)
            errors[CamID::B].first, errors[CamID::B].second);
     printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
            errors[CamID::R].first, errors[CamID::R].second);
+    outputFile << "After error" << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " " << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " " << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " " << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " " << errors[CamID::R].second << std::endl;
     printf("==================================================================="
            "==\n");
+
+    // Close the file
+    outputFile.close();
+
+    std::cout << "Data written to the file successfully." << std::endl;
 
     opt.SaveOptResult(output + "/after_all_calib");
 }
