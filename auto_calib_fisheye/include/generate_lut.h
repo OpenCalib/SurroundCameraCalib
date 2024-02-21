@@ -6,8 +6,10 @@
 
 namespace lut {
 
-std::vector<std::vector<int>> genLUT(
-    const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
-    const Eigen::Matrix3d& matK, const Eigen::Vector4d& matD);
+void genLUT(const Eigen::Matrix3d& matR,
+                                        const Eigen::Vector3d& vecT,
+                                        const Eigen::Matrix3d& matK,
+                                        const std::vector<double>& matD,
+                                        const std::string& lutOutputFile);
 
 }

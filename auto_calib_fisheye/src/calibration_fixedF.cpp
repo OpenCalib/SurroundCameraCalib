@@ -535,16 +535,16 @@ int main(int argc, char** argv)
     // bev images before optimization
     Mat GF = opt.project_on_ground(
         imgf, opt.initExt[CamID::F], opt.intrinsics[CamID::F],
-        opt.distortion_params_front, opt.KG, opt.brows, opt.bcols, opt.hf);
+        opt.distortion_params[CamID::F], opt.KG, opt.brows, opt.bcols, opt.hf);
     Mat GB = opt.project_on_ground(
         imgb, opt.initExt[CamID::B], opt.intrinsics[CamID::B],
-        opt.distortion_params_behind, opt.KG, opt.brows, opt.bcols, opt.hb);
+        opt.distortion_params[CamID::B], opt.KG, opt.brows, opt.bcols, opt.hb);
     Mat GL = opt.project_on_ground(
         imgl, opt.initExt[CamID::L], opt.intrinsics[CamID::L],
-        opt.distortion_params_left, opt.KG, opt.brows, opt.bcols, opt.hl);
+        opt.distortion_params[CamID::L], opt.KG, opt.brows, opt.bcols, opt.hl);
     Mat GR = opt.project_on_ground(
         imgr, opt.initExt[CamID::R], opt.intrinsics[CamID::R],
-        opt.distortion_params_right, opt.KG, opt.brows, opt.bcols, opt.hr);
+        opt.distortion_params[CamID::R], opt.KG, opt.brows, opt.bcols, opt.hr);
 
     GF = opt.tail(GF, CamID::F);
     // imwrite(output + "/GF_tail.png", GF);
@@ -569,6 +569,18 @@ int main(int argc, char** argv)
     imwrite(output + "/before_all_calib.png", bev_before);
     // imshow("opt_before", bev_before);
     // waitKey(0);
+
+    // Generate LUT
+    for (size_t i = 0; i < CamID::NUM_CAM; i++)
+    {
+        auto camId           = static_cast<CamID>(i);
+        Eigen::Matrix3d matR = opt.optExt[camId].block<3, 3>(0, 0);
+        Eigen::Vector3d vecT = opt.optExt[camId].block<3, 1>(0, 3);
+        lut::genLUT(matR, vecT, opt.intrinsics[camId],
+                    opt.distortion_params[camId],
+                    output + "/map" + std::to_string((int)camId) + ".txt");
+    }
+    exit(0);
 
     // front left field texture extraction
     vector<double> size  = {opt.tailSize[CamID::F], opt.tailSize[CamID::L],
@@ -820,8 +832,9 @@ int main(int argc, char** argv)
         auto camId           = static_cast<CamID>(i);
         Eigen::Matrix3d matR = opt.optExt[camId].block<3, 3>(0, 0);
         Eigen::Vector3d vecT = opt.optExt[camId].block<3, 1>(0, 3);
-        Eigen::Vector3d matK = opt.intrinsics[camId].block<3, 1>(0, 3);
-        // lut::genLUT(matR, vecT, matK);
+        lut::genLUT(matR, vecT, opt.intrinsics[camId],
+                    opt.distortion_params[camId],
+                    output + "/map" + std::to_string((int)camId) + ".txt");
     }
 
     // Close the file
