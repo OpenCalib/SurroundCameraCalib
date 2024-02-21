@@ -157,13 +157,13 @@ void Optimizer::SaveOptResult(const string filename)
 {
     // do not tail imgs
     // Mat
-    // imgf_bev_rgb_=project_on_ground(imgf_rgb,optExt[CamID::F],intrinsic_front,distortion_params_front,KG,brows,bcols,hb);
+    // imgf_bev_rgb_=project_on_ground(imgf_rgb,optExt[CamID::F],intrinsics[CamID::F],distortion_params_front,KG,brows,bcols,hb);
     // Mat
-    // imgl_bev_rgb_=project_on_ground(imgl_rgb,optExt[CamID::L],intrinsic_left,distortion_params_left,KG,brows,bcols,hl);
+    // imgl_bev_rgb_=project_on_ground(imgl_rgb,optExt[CamID::L],intrinsics[CamID::L],distortion_params_left,KG,brows,bcols,hl);
     // Mat
-    // imgr_bev_rgb_=project_on_ground(imgr_rgb,optExt[CamID::R],intrinsic_right,distortion_params_right,KG,brows,bcols,hr);
+    // imgr_bev_rgb_=project_on_ground(imgr_rgb,optExt[CamID::R],intrinsics[CamID::R],distortion_params_right,KG,brows,bcols,hr);
     // Mat
-    // imgb_bev_rgb_=project_on_ground(imgb_rgb,optExt[CamID::B],intrinsic_behind,distortion_params_behind,KG,brows,bcols,hb);
+    // imgb_bev_rgb_=project_on_ground(imgb_rgb,optExt[CamID::B],intrinsics[CamID::B],distortion_params_behind,KG,brows,bcols,hb);
 
     //
     Mat opt_after  = generate_surround_view(imgf_bev_rgb, imgl_bev_rgb,
@@ -340,10 +340,10 @@ void Optimizer::initializeK()
             765.1062622070313, 0, 0, 1;
     }
 
-    intrinsic_front  = K_F;
-    intrinsic_left   = K_L;
-    intrinsic_behind = K_B;
-    intrinsic_right  = K_R;
+    intrinsics[CamID::F] = K_F;
+    intrinsics[CamID::L] = K_L;
+    intrinsics[CamID::B] = K_B;
+    intrinsics[CamID::R] = K_R;
     return;
 }
 
@@ -714,14 +714,14 @@ Optimizer::Optimizer(const std::string &calibPath, const Mat *imgf,
 
     if (fixed == CamID::F)
     {
-        imgf_bev_gray =
-            project_on_ground(imgf_gray, initExt[CamID::F], intrinsic_front,
-                              distortion_params_front, KG, brows, bcols, hf);
-        imgf_bev_atb =
-            project_on_ground(imgf_gray, initExt[CamID::F], intrinsic_front,
-                              distortion_params_front, KG, brows, bcols, hf);
+        imgf_bev_gray = project_on_ground(
+            imgf_gray, initExt[CamID::F], intrinsics[CamID::F],
+            distortion_params_front, KG, brows, bcols, hf);
+        imgf_bev_atb = project_on_ground(
+            imgf_gray, initExt[CamID::F], intrinsics[CamID::F],
+            distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, initExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_rgb, initExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
         imgf_bev_atb  = tail(imgf_bev_atb, CamID::F);
@@ -729,14 +729,14 @@ Optimizer::Optimizer(const std::string &calibPath, const Mat *imgf,
     }
     else
     {
-        imgb_bev_gray =
-            project_on_ground(imgb_gray, initExt[CamID::B], intrinsic_behind,
-                              distortion_params_behind, KG, brows, bcols, hb);
+        imgb_bev_gray = project_on_ground(
+            imgb_gray, initExt[CamID::B], intrinsics[CamID::B],
+            distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_rgb, initExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
         imgb_bev_atb  = tail(imgb_bev_atb, CamID::B);
@@ -933,12 +933,12 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {  // bev_front->camera_left
         // show=imgl_rgb.clone();  //when test and display back projection
         // process, Mat(show) is needed
-        DC = distortion_params_left;  // distortortion params whose camera is
-                                      // back projected to
-        KC     = intrinsic_left;      // K whose camera is back projected to
-        pG     = pG_fl;               // front bev texture pixels(Mat)
-        PG     = PG_fl;               // front bev pixels->3d points(Mat)
-        pixels = fl_pixels_texture;   // front bev texture pixels(vector)
+        DC = distortion_params_left;    // distortortion params whose camera is
+                                        // back projected to
+        KC     = intrinsics[CamID::L];  // K whose camera is back projected to
+        pG     = pG_fl;                 // front bev texture pixels(Mat)
+        PG     = PG_fl;                 // front bev pixels->3d points(Mat)
+        pixels = fl_pixels_texture;     // front bev texture pixels(vector)
         ncoef  = ncoef_fl;  // mean gray luminosity of front bev in commonview /
                             // mean gray luminosity of left bev in commonview
     }
@@ -948,7 +948,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
         // show=imgr_gray.clone();
         // cvtColor(show,show,CV_GRAY2BGR);
         DC     = distortion_params_right;
-        KC     = intrinsic_right;
+        KC     = intrinsics[CamID::R];
         pG     = pG_fr;
         PG     = PG_fr;
         pixels = fr_pixels_texture;
@@ -958,7 +958,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgb_rgb.clone();
         DC     = distortion_params_behind;
-        KC     = intrinsic_behind;
+        KC     = intrinsics[CamID::B];
         pG     = pG_bl;
         PG     = PG_bl;
         pixels = bl_pixels_texture;
@@ -968,7 +968,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgb_rgb.clone();
         DC     = distortion_params_behind;
-        KC     = intrinsic_behind;
+        KC     = intrinsics[CamID::B];
         pG     = pG_br;
         PG     = PG_br;
         pixels = br_pixels_texture;
@@ -978,7 +978,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgf_rgb.clone();
         DC     = distortion_params_front;
-        KC     = intrinsic_front;
+        KC     = intrinsics[CamID::F];
         pG     = pG_fl;
         PG     = PG_fl;
         pixels = fl_pixels_texture;
@@ -988,7 +988,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgf_rgb.clone();
         DC     = distortion_params_front;
-        KC     = intrinsic_front;
+        KC     = intrinsics[CamID::F];
         pG     = pG_fr;
         PG     = PG_fr;
         pixels = fr_pixels_texture;
@@ -998,7 +998,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgr_rgb.clone();
         DC     = distortion_params_right;
-        KC     = intrinsic_right;
+        KC     = intrinsics[CamID::R];
         pG     = pG_br;
         PG     = PG_br;
         pixels = br_pixels_texture;
@@ -1008,7 +1008,7 @@ double Optimizer::back_camera_and_compute_loss(Mat img1_bev_gray,
     {
         // show=imgl_rgb.clone();
         DC     = distortion_params_left;
-        KC     = intrinsic_left;
+        KC     = intrinsics[CamID::L];
         pG     = pG_bl;
         PG     = PG_bl;
         pixels = bl_pixels_texture;
@@ -1185,13 +1185,13 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
 
         imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
@@ -1231,13 +1231,13 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
 
         imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
@@ -1277,13 +1277,13 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
 
         imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
@@ -1318,13 +1318,13 @@ void Optimizer::random_search_params(int search_count, double roll_ep0,
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
 
         imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
@@ -1480,13 +1480,13 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
 
         imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
@@ -1526,13 +1526,13 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
 
         imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
@@ -1572,13 +1572,13 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
 
         imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
@@ -1613,13 +1613,13 @@ void Optimizer::fine_random_search_params(int search_count, double roll_ep0,
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
 
         imgf_bev_gray = tail(imgf_bev_gray, CamID::F);
@@ -1752,13 +1752,13 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexleft);
         imgl_bev_gray =
-            project_on_ground(imgl_gray, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_gray, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_rgb =
-            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_rgb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
         imgl_bev_atb =
-            project_on_ground(imgl_atb, optExt[CamID::L], intrinsic_left,
+            project_on_ground(imgl_atb, optExt[CamID::L], intrinsics[CamID::L],
                               distortion_params_left, KG, brows, bcols, hl);
 
         imgl_bev_gray = tail(imgl_bev_gray, CamID::L);
@@ -1769,13 +1769,13 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexright);
         imgr_bev_gray =
-            project_on_ground(imgr_gray, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_gray, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_rgb =
-            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_rgb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
         imgr_bev_atb =
-            project_on_ground(imgr_atb, optExt[CamID::R], intrinsic_right,
+            project_on_ground(imgr_atb, optExt[CamID::R], intrinsics[CamID::R],
                               distortion_params_right, KG, brows, bcols, hr);
 
         imgr_bev_gray = tail(imgr_bev_gray, CamID::R);
@@ -1786,13 +1786,13 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
     {
         lock_guard<std::mutex> lock(mutexbehind);
         imgb_bev_gray =
-            project_on_ground(imgb_gray, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_gray, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_rgb =
-            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_rgb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
         imgb_bev_atb =
-            project_on_ground(imgb_atb, optExt[CamID::B], intrinsic_behind,
+            project_on_ground(imgb_atb, optExt[CamID::B], intrinsics[CamID::B],
                               distortion_params_behind, KG, brows, bcols, hb);
 
         imgb_bev_gray = tail(imgb_bev_gray, CamID::B);
@@ -1803,13 +1803,13 @@ void Optimizer::best_random_search_params(int search_count, double roll_ep0,
     {  // if fix back camera,front camera is calibrated at last
         lock_guard<std::mutex> lock(mutexfront);
         imgf_bev_gray =
-            project_on_ground(imgf_gray, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_gray, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hf);
         imgf_bev_rgb =
-            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_rgb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
         imgf_bev_atb =
-            project_on_ground(imgf_atb, optExt[CamID::F], intrinsic_front,
+            project_on_ground(imgf_atb, optExt[CamID::F], intrinsics[CamID::F],
                               distortion_params_front, KG, brows, bcols, hb);
 
         imgf_bev_gray = tail(imgf_bev_gray, CamID::F);

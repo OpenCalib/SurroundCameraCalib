@@ -19,6 +19,7 @@
 #include <random>
 #include <thread>
 #include <vector>
+#include "generate_lut.h"
 #include "optimizer.h"
 #include "texture_extractor.h"
 #include "transform_util.h"
@@ -533,16 +534,16 @@ int main(int argc, char** argv)
 
     // bev images before optimization
     Mat GF = opt.project_on_ground(
-        imgf, opt.initExt[CamID::F], opt.intrinsic_front,
+        imgf, opt.initExt[CamID::F], opt.intrinsics[CamID::F],
         opt.distortion_params_front, opt.KG, opt.brows, opt.bcols, opt.hf);
     Mat GB = opt.project_on_ground(
-        imgb, opt.initExt[CamID::B], opt.intrinsic_behind,
+        imgb, opt.initExt[CamID::B], opt.intrinsics[CamID::B],
         opt.distortion_params_behind, opt.KG, opt.brows, opt.bcols, opt.hb);
     Mat GL = opt.project_on_ground(
-        imgl, opt.initExt[CamID::L], opt.intrinsic_left,
+        imgl, opt.initExt[CamID::L], opt.intrinsics[CamID::L],
         opt.distortion_params_left, opt.KG, opt.brows, opt.bcols, opt.hl);
     Mat GR = opt.project_on_ground(
-        imgr, opt.initExt[CamID::R], opt.intrinsic_right,
+        imgr, opt.initExt[CamID::R], opt.intrinsics[CamID::R],
         opt.distortion_params_right, opt.KG, opt.brows, opt.bcols, opt.hr);
 
     GF = opt.tail(GF, CamID::F);
@@ -756,7 +757,6 @@ int main(int argc, char** argv)
 
     outputFile << "CamID - Translation error - Rotation error" << std::endl;
 
-
     std::array<std::pair<double, double>, 4> errors;
     errors[CamID::F] =
         util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
@@ -776,10 +776,14 @@ int main(int argc, char** argv)
            errors[CamID::R].first, errors[CamID::R].second);
 
     outputFile << "Before error" << std::endl;
-    outputFile << "F: " << errors[CamID::F].first << " " << errors[CamID::F].second << std::endl;
-    outputFile << "L: " << errors[CamID::L].first << " " << errors[CamID::L].second << std::endl;
-    outputFile << "B: " << errors[CamID::B].first << " " << errors[CamID::B].second << std::endl;
-    outputFile << "R: " << errors[CamID::R].first << " " << errors[CamID::R].second << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " "
+               << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " "
+               << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " "
+               << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " "
+               << errors[CamID::R].second << std::endl;
     printf("==================================================================="
            "==\n");
     errors[CamID::F] =
@@ -799,12 +803,26 @@ int main(int argc, char** argv)
     printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
            errors[CamID::R].first, errors[CamID::R].second);
     outputFile << "After error" << std::endl;
-    outputFile << "F: " << errors[CamID::F].first << " " << errors[CamID::F].second << std::endl;
-    outputFile << "L: " << errors[CamID::L].first << " " << errors[CamID::L].second << std::endl;
-    outputFile << "B: " << errors[CamID::B].first << " " << errors[CamID::B].second << std::endl;
-    outputFile << "R: " << errors[CamID::R].first << " " << errors[CamID::R].second << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " "
+               << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " "
+               << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " "
+               << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " "
+               << errors[CamID::R].second << std::endl;
     printf("==================================================================="
            "==\n");
+
+    // Generate LUT
+    for (size_t i = 0; i < CamID::NUM_CAM; i++)
+    {
+        auto camId           = static_cast<CamID>(i);
+        Eigen::Matrix3d matR = opt.optExt[camId].block<3, 3>(0, 0);
+        Eigen::Vector3d vecT = opt.optExt[camId].block<3, 1>(0, 3);
+        Eigen::Vector3d matK = opt.intrinsics[camId].block<3, 1>(0, 3);
+        // lut::genLUT(matR, vecT, matK);
+    }
 
     // Close the file
     outputFile.close();

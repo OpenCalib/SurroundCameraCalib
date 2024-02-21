@@ -16,7 +16,8 @@ enum CamID : size_t
     F = 0,
     L,
     B,
-    R
+    R,
+    NUM_CAM
 };
 
 class Optimizer
@@ -62,10 +63,11 @@ public:
     int bcols;
 
     // SVS cameras intrinsic-T
-    Eigen::Matrix3d intrinsic_front;
-    Eigen::Matrix3d intrinsic_left;
-    Eigen::Matrix3d intrinsic_behind;
-    Eigen::Matrix3d intrinsic_right;
+    // Eigen::Matrix3d intrinsic_front;
+    // Eigen::Matrix3d intrinsic_left;
+    // Eigen::Matrix3d intrinsic_behind;
+    // Eigen::Matrix3d intrinsic_right;
+    std::array<Eigen::Matrix3d, 4> intrinsics;
 
     // K_G
     Eigen::Matrix3d KG;
@@ -75,10 +77,11 @@ public:
     std::array<Eigen::Matrix4d, 4> optExt;
 
     // distortion papameters
-    vector<double> distortion_params_front;
-    vector<double> distortion_params_left;
-    vector<double> distortion_params_behind;
-    vector<double> distortion_params_right;
+    std::array<vector<double>, 4> distortion_params;
+    // vector<double> distortion_params_front;
+    // vector<double> distortion_params_left;
+    // vector<double> distortion_params_behind;
+    // vector<double> distortion_params_right;
 
     // SVS cameras height
     double hf, hl, hb, hr;
