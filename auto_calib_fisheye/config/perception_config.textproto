@@ -1,0 +1,35 @@
+imgproc_config: {
+    frag_shader: "data/perception/calibs/vf8/BowlFragShader_16_18.fsh"
+    vert_shader: "data/perception/calibs/vf8/BowlVertShader_16_18.vsh"
+    seg_frag_shader: "data/perception/calibs/vf8/SegmentTopView.fsh"
+    seg_vert_shader: "data/perception/calibs/vf8/SegmentTopView.vsh"
+    model_name: "data/perception/calibs/vf8/Bowl_topview_ver1_16_18.obj"
+    texture_tv_image_0: "data/perception/calibs/vf8/alpha_TV_0.png"
+    texture_tv_image_1: "data/perception/calibs/vf8/alpha_TV_1.png"
+    texture_tv_image_2: "data/perception/calibs/vf8/alpha_TV_2.png"
+    texture_tv_image_3: "data/perception/calibs/vf8/alpha_TV_3.png"
+    calib_info_0: "data/perception/calibs/vf8/calib_cam0_topview.txt"
+    calib_info_1: "data/perception/calibs/vf8/calib_cam1_topview.txt"
+    calib_info_2: "data/perception/calibs/vf8/calib_cam2_topview.txt"
+    calib_info_3: "data/perception/calibs/vf8/calib_cam3_topview.txt"
+    min_diff_thresh: 200
+    cached_indices: 2
+    calib_dir: "data/perception/calibs/vf8/"
+    cuda_enabled: true
+}
+spdet_config: {
+    camera_json_data: "data/perception/calibs/vf8/cameraData.json"
+    alpha_front: "data/perception/calibs/vf8/alpha_1.png"
+    alpha_rear: "data/perception/calibs/vf8/alpha_2.png"
+    roi_mask_front: "data/perception/calibs/vf8/roi_mask_1.png"
+    roi_mask_rear: "data/perception/calibs/vf8/roi_mask_2.png"
+    roi_mask_left: "data/perception/calibs/vf8/roi_mask_0.png"
+    roi_mask_right: "data/perception/calibs/vf8/roi_mask_3.png"
+}
+usshandler_config: {
+    min_diff_thresh: 100
+    cached_indices: 5
+}
+od_enabled: false
+uss_enabled: false
+od3d_enabled: false

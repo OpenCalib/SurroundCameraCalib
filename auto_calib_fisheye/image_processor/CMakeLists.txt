@@ -12,7 +12,7 @@ list(APPEND LIBRARIES
             ${OPENGL_LIBRARIES}
 )                        
 set(SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto/perception_config.pb.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/perception_config.pb.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/src/opengl_util.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/cuda_utils.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/top_view_stitching.cpp

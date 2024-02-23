@@ -26,9 +26,15 @@ void lut::genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
     {
         for (size_t x = 0; x < TOPVIEW_W * 10; ++x)
         {
-            float xWorld                         = x / 10.0 - TOPVIEW_W / 2.0;
-            float yWorld                         = y / 10.0 - TOPVIEW_H / 2.0;
-            std::vector<float> vecWorldPosRotate = {xWorld, yWorld, 1};
+            // float xWorld                         = x / 10.0 - TOPVIEW_W
+            // / 2.0; float yWorld                         = y / 10.0 -
+            // TOPVIEW_H / 2.0;
+            float xWorld = x / 10.0 - TOPVIEW_W / 2.0;
+            float yWorld = TOPVIEW_H / 2.0 - y / 10.0;
+            // float xWorld                         = TOPVIEW_H / 2.0 - y
+            // / 10.0; float yWorld                         = x / 10.0 -
+            // TOPVIEW_W / 2.0;
+            std::vector<float> vecWorldPosRotate = {xWorld, yWorld, 0};
             float vecPointTransformed[3];
             vecPointTransformed[0] = matR(0, 0) * vecWorldPosRotate[0] +
                                      matR(0, 1) * vecWorldPosRotate[1] +
