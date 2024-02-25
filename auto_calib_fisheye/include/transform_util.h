@@ -6,6 +6,8 @@
 #include <opencv2/core/eigen.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <defines.h>
+
 inline double rad2deg(double radians)
 {
     return radians * 180.0 / M_PI;

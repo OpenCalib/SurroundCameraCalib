@@ -20,6 +20,7 @@
 #include <thread>
 #include <vector>
 #include "config_parser.h"
+#include "defines.h"
 #include "generate_lut.h"
 #include "image_processor_context.h"
 #include "image_processor_cuda.h"
@@ -490,7 +491,7 @@ int main(int argc, char** argv)
         3.pure Adpative Threshold Binarization in all three phase of
     optimization: solution_model_="atb"
     */
-    string solution_model_ = "atb+gray";
+    std::string solution_model_ = "atb+gray";
 
     // if add road semantic segmentation when in texture extraction process to
     // improve accuracy
@@ -532,10 +533,57 @@ int main(int argc, char** argv)
     Mat imgr = cv::imread(input + "/r" + extension);
     std::filesystem::create_directories(output);
 
+    // topview generator with blending
+    using namespace perception::imgproc;
+    auto config = std::make_shared<PerceptionConfig>();
+    util::LoadProtoFromASCIIFile(
+        "/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/config/"
+        "perception_config.textproto",
+        config.get());
+
     // initilize the optimizer
     Optimizer opt(calib, &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows,
                   bev_cols, fixed, coarse_search_flag, dataset,
                   flag_add_disturbance, output, solution_model_);
+
+    // transform extrinsics matrix to be associate with FAPA world frame
+    // clang-format off
+    Eigen::Matrix4d rotCounterCw90;
+    rotCounterCw90 << 0,-1, 0, 0, 
+                      1, 0, 0, 0, 
+                      0, 0, 1, 0, 
+                      0, 0, 0, 1;
+    // clang-format on
+    // Matrix4d transExtToFapaWorld = rot90.transpose();
+
+    std::array<std::vector<short>, 4> uvLists;
+    for (size_t i = 0; i < CamID::NUM_CAM; i++)
+    {
+        auto camId   = static_cast<CamID>(i);
+        Matrix4d ext = opt.initExt[camId] * rotCounterCw90;
+        // Matrix4d ext         = opt.initExt[camId];
+        Eigen::Matrix3d matR = ext.block<3, 3>(0, 0);
+        Eigen::Vector3d vecT = ext.block<3, 1>(0, 3);
+        uvLists[i].resize(900 * 800 * 2);
+        lut::genLUT(camId, matR, vecT, opt.intrinsics[camId],
+                    opt.distortion_params[camId], uvLists[i],
+                    output + "/map" + std::to_string((int)camId) + ".txt",
+                    false);
+    }
+
+    auto imgprocContext = std::make_unique<ImageProcessorContext>(
+        std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
+        std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
+
+    if (!imgprocContext->init(uvLists))
+    {
+        LOG_ERROR("Failed to initialize image processor context!");
+        throw std::runtime_error("Cannot init attributes");
+    }
+
+    cv::Mat imgTop;
+    imgprocContext->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
+    cv::imwrite(output + "/topview_before.png", imgTop);
 
     // bev images before optimization
     Mat GF = opt.project_on_ground(
@@ -575,321 +623,276 @@ int main(int argc, char** argv)
     // imshow("opt_before", bev_before);
     // waitKey(0);
 
-    // Generate LUT
-    for (size_t i = 0; i < CamID::NUM_CAM; i++)
+    // front left field texture extraction
+    vector<double> size  = {opt.tailSize[CamID::F], opt.tailSize[CamID::L],
+                            opt.tailSize[CamID::B], opt.tailSize[CamID::R]};
+    int exposure_flag_fl = 1;  // if add exposure solution
+    extractor ext1(GF, GL, add_semantic_segmentation_front, exposure_flag_fl,
+                   size);
+    if (add_semantic_segmentation_front)
     {
-        auto camId           = static_cast<CamID>(i);
-        Eigen::Matrix3d matR = opt.optExt[camId].block<3, 3>(0, 0);
-        Eigen::Vector3d vecT = opt.optExt[camId].block<3, 1>(0, 3);
-        lut::genLUT(matR, vecT, opt.intrinsics[camId],
-                    opt.distortion_params[camId],
-                    output + "/map" + std::to_string((int)camId) + ".txt");
+        Mat mask_fl = imread(input + "/mask/front.png");
+        ext1.mask_ground.push_back(mask_fl);
+    }
+    ext1.Binarization();
+    ext1.findcontours();
+    opt.fl_pixels_texture = ext1.extrac_textures_and_save(
+        output + "/texture_fl.png", output + "/fl.csv");
+    if (ext1.exposure_flag && ext1.ncoef > 0.5)
+    {
+        opt.ncoef_fl = ext1.ncoef;
+        // cout<<"ncoef_fl:"<<opt.ncoef_fl<<endl;
+    }
+    else
+    {
+        opt.ncoef_fl = 1;
+        // cout<<"ncoef_fl:"<<opt.ncoef_fl<<endl;
+    }
+    Mat pG_fl = Mat::ones(3, opt.fl_pixels_texture.size(), CV_64FC1);
+    for (int i = 0; i < opt.fl_pixels_texture.size(); i++)
+    {
+        pG_fl.at<double>(0, i) = opt.fl_pixels_texture[i].first.x;
+        pG_fl.at<double>(1, i) = opt.fl_pixels_texture[i].first.y;
+    }
+    opt.pG_fl = pG_fl;
+    Mat PG_fl = Mat::ones(4, opt.fl_pixels_texture.size(), CV_64FC1);
+    PG_fl(cv::Rect(0, 0, opt.fl_pixels_texture.size(), 3)) =
+        opt.eigen2mat(opt.KG.inverse()) * pG_fl * opt.hf;
+    opt.PG_fl = PG_fl;
+
+    // front right field texture extraction
+    int exposure_flag_fr = 1;  // if add exposure solution
+    extractor ext2(GF, GR, add_semantic_segmentation_front, exposure_flag_fr,
+                   size);
+    if (add_semantic_segmentation_front)
+    {
+        Mat mask_fr = imread(input + "/mask/front.png");
+        ext2.mask_ground.push_back(mask_fr);
+    }
+    ext2.Binarization();
+    ext2.findcontours();
+    opt.fr_pixels_texture = ext2.extrac_textures_and_save(
+        output + "/texture_fr.png", output + "/fr.csv");
+    if (ext2.exposure_flag && ext2.ncoef > 0.5)
+    {
+        opt.ncoef_fr = ext2.ncoef;
+        cout << "ncoef_fr:" << opt.ncoef_fr << endl;
+    }
+    else
+    {
+        opt.ncoef_fr = 1;
+    }
+    Mat pG_fr = Mat::ones(3, opt.fr_pixels_texture.size(), CV_64FC1);
+    for (int i = 0; i < opt.fr_pixels_texture.size(); i++)
+    {
+        pG_fr.at<double>(0, i) = opt.fr_pixels_texture[i].first.x;
+        pG_fr.at<double>(1, i) = opt.fr_pixels_texture[i].first.y;
+    }
+    opt.pG_fr = pG_fr;
+    Mat PG_fr = Mat::ones(4, opt.fr_pixels_texture.size(), CV_64FC1);
+    PG_fr(cv::Rect(0, 0, opt.fr_pixels_texture.size(), 3)) =
+        opt.eigen2mat(opt.KG.inverse()) * pG_fr * opt.hf;
+    opt.PG_fr = PG_fr;
+
+    cout << "*********************************start "
+            "right*************************************"
+         << endl;
+    double during1 = CameraOptimization(opt, CamID::R);
+
+    cout << "*********************************start "
+            "left**************************************"
+         << endl;
+    double during2 = CameraOptimization(opt, CamID::L);
+
+    // back left field texture extraction
+    int exposure_flag_bl = 1;  // if add exposure solution
+    cv::imwrite(output + "/GB.png", GB);
+    cv::imwrite(output + "/imgl_bev_rgb.png", opt.imgl_bev_rgb);
+    extractor ext3(opt.imgl_bev_rgb, GB, add_semantic_segmentation_left,
+                   exposure_flag_bl, size);
+    if (add_semantic_segmentation_left)
+    {
+        Mat mask_bl = imread(input + "/mask/left.png");
+        ext3.mask_ground.push_back(mask_bl);
+    }
+    ext3.Binarization();
+    ext3.findcontours();
+    opt.bl_pixels_texture = ext3.extrac_textures_and_save(
+        output + "/texture_bl.png", output + "/bl.csv");
+    if (ext3.exposure_flag && ext3.ncoef > 0.5)
+    {
+        opt.ncoef_bl = ext3.ncoef;
+        cout << "ncoef_bl:" << opt.ncoef_bl << endl;
+    }
+    else
+    {
+        opt.ncoef_bl = 1;
+        cout << "ncoef_bl:" << opt.ncoef_bl << endl;
+    }
+    Mat pG_bl = Mat::ones(3, opt.bl_pixels_texture.size(), CV_64FC1);
+    for (int i = 0; i < opt.bl_pixels_texture.size(); i++)
+    {
+        pG_bl.at<double>(0, i) = opt.bl_pixels_texture[i].first.x;
+        pG_bl.at<double>(1, i) = opt.bl_pixels_texture[i].first.y;
+    }
+    opt.pG_bl = pG_bl;
+    Mat PG_bl = Mat::ones(4, opt.bl_pixels_texture.size(), CV_64FC1);
+    PG_bl(cv::Rect(0, 0, opt.bl_pixels_texture.size(), 3)) =
+        opt.eigen2mat(opt.KG.inverse()) * pG_bl * opt.hl;
+    opt.PG_bl = PG_bl;
+
+    // back right field texture extraction
+    int exposure_flag_br = 1;  // if add exposure solution
+    cv::imwrite(output + "/GB.png", GB);
+    cv::imwrite(output + "/imgr_bev_rgb.png", opt.imgr_bev_rgb);
+    extractor ext4(opt.imgr_bev_rgb, GB, add_semantic_segmentation_right,
+                   exposure_flag_br, size);
+    if (add_semantic_segmentation_right)
+    {
+        Mat mask_br = imread(input + "/mask/right.png");
+        ext4.mask_ground.push_back(mask_br);
+    }
+    ext4.Binarization();
+    ext4.findcontours();
+    opt.br_pixels_texture = ext4.extrac_textures_and_save(
+        output + "/texture_br.png", output + "/br.csv");
+    // opt.br_pixels_texture=opt.readfromcsv(prefix+"/br.csv");
+    if (ext4.exposure_flag && ext4.ncoef > 0.5)
+    {
+        opt.ncoef_br = ext4.ncoef;
+        cout << "ncoef_br:" << opt.ncoef_br << endl;
+    }
+    else
+    {
+        opt.ncoef_br = 1;
+        cout << "ncoef_br:" << opt.ncoef_br << endl;
+    }
+    Mat pG_br = Mat::ones(3, opt.br_pixels_texture.size(), CV_64FC1);
+    for (int i = 0; i < opt.br_pixels_texture.size(); i++)
+    {
+        pG_br.at<double>(0, i) = opt.br_pixels_texture[i].first.x;
+        pG_br.at<double>(1, i) = opt.br_pixels_texture[i].first.y;
+    }
+    opt.pG_br = pG_br;
+    Mat PG_br = Mat::ones(4, opt.br_pixels_texture.size(), CV_64FC1);
+    PG_br(cv::Rect(0, 0, opt.br_pixels_texture.size(), 3)) =
+        opt.eigen2mat(opt.KG.inverse()) * pG_br * opt.hr;
+    opt.PG_br = PG_br;
+
+    cout << "*********************************start "
+            "behind***********************************"
+         << endl;
+    double during3 = CameraOptimization(opt, CamID::B);
+
+    cout << "************************online calibration "
+            "finished!!!**************************"
+         << endl;
+    cout << "total calibration time:" << during1 + during2 + during3 << "s"
+         << endl;
+
+    printf("==================================================================="
+           "==\n");
+    std::cout << "GT Extrinsics:\n" << opt.gtExt[CamID::B] << "\n";
+    std::cout << "Opt Extrinsics:\n" << opt.optExt[CamID::B] << "\n";
+
+    printf("==================================================================="
+           "==\n");
+
+    // Open a file for writing
+    std::ofstream outputFile(output + "/errors.txt");
+
+    // Check if the file is successfully opened
+    if (!outputFile.is_open())
+    {
+        std::cerr << "Error opening the file for writing." << std::endl;
+        return 1;  // Exit with an error code
     }
 
-    using namespace perception::imgproc;
-    auto config = std::make_shared<PerceptionConfig>();
-    util::LoadProtoFromASCIIFile(
-        "/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/config/"
-        "perception_config.textproto",
-        config.get());
+    outputFile << "CamID - Translation error - Rotation error" << std::endl;
 
-    auto imgprocContext = std::make_unique<ImageProcessorContext>(
-        std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
-        std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
+    std::array<std::pair<double, double>, 4> errors;
+    errors[CamID::F] =
+        util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
+    errors[CamID::L] =
+        util::calculateError(opt.initExt[CamID::L], opt.gtExt[CamID::L]);
+    errors[CamID::B] =
+        util::calculateError(opt.initExt[CamID::B], opt.gtExt[CamID::B]);
+    errors[CamID::R] =
+        util::calculateError(opt.initExt[CamID::R], opt.gtExt[CamID::R]);
+    printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::F].first, errors[CamID::F].second);
+    printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::L].first, errors[CamID::L].second);
+    printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::B].first, errors[CamID::B].second);
+    printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::R].first, errors[CamID::R].second);
 
-    if (!imgprocContext->init())
+    outputFile << "Before error" << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " "
+               << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " "
+               << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " "
+               << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " "
+               << errors[CamID::R].second << std::endl;
+    printf("==================================================================="
+           "==\n");
+    errors[CamID::F] =
+        util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
+    errors[CamID::L] =
+        util::calculateError(opt.optExt[CamID::L], opt.gtExt[CamID::L]);
+    errors[CamID::B] =
+        util::calculateError(opt.optExt[CamID::B], opt.gtExt[CamID::B]);
+    errors[CamID::R] =
+        util::calculateError(opt.optExt[CamID::R], opt.gtExt[CamID::R]);
+    printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::F].first, errors[CamID::F].second);
+    printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::L].first, errors[CamID::L].second);
+    printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::B].first, errors[CamID::B].second);
+    printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
+           errors[CamID::R].first, errors[CamID::R].second);
+    outputFile << "After error" << std::endl;
+    outputFile << "F: " << errors[CamID::F].first << " "
+               << errors[CamID::F].second << std::endl;
+    outputFile << "L: " << errors[CamID::L].first << " "
+               << errors[CamID::L].second << std::endl;
+    outputFile << "B: " << errors[CamID::B].first << " "
+               << errors[CamID::B].second << std::endl;
+    outputFile << "R: " << errors[CamID::R].first << " "
+               << errors[CamID::R].second << std::endl;
+    printf("==================================================================="
+           "==\n");
+
+    // Generate LUT
+    // std::shared_ptr<std::vector<cv::Mat>>> uvListsPtr;
+    // std::vector<cv::Mat> uvLists(4, cv::Mat(900, 800, CV_16SC2));
+    for (size_t i = 0; i < CamID::NUM_CAM; i++)
+    {
+        auto camId   = static_cast<CamID>(i);
+        Matrix4d ext = opt.optExt[camId] * rotCounterCw90;
+        // Matrix4d ext         = opt.optExt[camId];
+        Eigen::Matrix3d matR = ext.block<3, 3>(0, 0);
+        Eigen::Vector3d vecT = ext.block<3, 1>(0, 3);
+        lut::genLUT(camId, matR, vecT, opt.intrinsics[camId],
+                    opt.distortion_params[camId], uvLists[i],
+                    output + "/map" + std::to_string((int)camId) + ".txt",
+                    false);
+    }
+
+    if (!imgprocContext->init(uvLists))
     {
         LOG_ERROR("Failed to initialize image processor context!");
         throw std::runtime_error("Cannot init attributes");
     }
-    cv::Mat imgTop;
+
     imgprocContext->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
 
     LOG_INFO("Writing image");
-    cv::imwrite(output + "/topview.png", imgTop);
+    cv::imwrite(output + "/topview_after.png", imgTop);
 
-    exit(0);
-
-    // // front left field texture extraction
-    // vector<double> size  = {opt.tailSize[CamID::F], opt.tailSize[CamID::L],
-    //                         opt.tailSize[CamID::B], opt.tailSize[CamID::R]};
-    // int exposure_flag_fl = 1;  // if add exposure solution
-    // extractor ext1(GF, GL, add_semantic_segmentation_front, exposure_flag_fl,
-    //                size);
-    // if (add_semantic_segmentation_front)
-    // {
-    //     Mat mask_fl = imread(input + "/mask/front.png");
-    //     ext1.mask_ground.push_back(mask_fl);
-    // }
-    // ext1.Binarization();
-    // ext1.findcontours();
-    // opt.fl_pixels_texture = ext1.extrac_textures_and_save(
-    //     output + "/texture_fl.png", output + "/fl.csv");
-    // if (ext1.exposure_flag && ext1.ncoef > 0.5)
-    // {
-    //     opt.ncoef_fl = ext1.ncoef;
-    //     // cout<<"ncoef_fl:"<<opt.ncoef_fl<<endl;
-    // }
-    // else
-    // {
-    //     opt.ncoef_fl = 1;
-    //     // cout<<"ncoef_fl:"<<opt.ncoef_fl<<endl;
-    // }
-    // Mat pG_fl = Mat::ones(3, opt.fl_pixels_texture.size(), CV_64FC1);
-    // for (int i = 0; i < opt.fl_pixels_texture.size(); i++)
-    // {
-    //     pG_fl.at<double>(0, i) = opt.fl_pixels_texture[i].first.x;
-    //     pG_fl.at<double>(1, i) = opt.fl_pixels_texture[i].first.y;
-    // }
-    // opt.pG_fl = pG_fl;
-    // Mat PG_fl = Mat::ones(4, opt.fl_pixels_texture.size(), CV_64FC1);
-    // PG_fl(cv::Rect(0, 0, opt.fl_pixels_texture.size(), 3)) =
-    //     opt.eigen2mat(opt.KG.inverse()) * pG_fl * opt.hf;
-    // opt.PG_fl = PG_fl;
-    //
-    // // front right field texture extraction
-    // int exposure_flag_fr = 1;  // if add exposure solution
-    // extractor ext2(GF, GR, add_semantic_segmentation_front, exposure_flag_fr,
-    //                size);
-    // if (add_semantic_segmentation_front)
-    // {
-    //     Mat mask_fr = imread(input + "/mask/front.png");
-    //     ext2.mask_ground.push_back(mask_fr);
-    // }
-    // ext2.Binarization();
-    // ext2.findcontours();
-    // opt.fr_pixels_texture = ext2.extrac_textures_and_save(
-    //     output + "/texture_fr.png", output + "/fr.csv");
-    // if (ext2.exposure_flag && ext2.ncoef > 0.5)
-    // {
-    //     opt.ncoef_fr = ext2.ncoef;
-    //     cout << "ncoef_fr:" << opt.ncoef_fr << endl;
-    // }
-    // else
-    // {
-    //     opt.ncoef_fr = 1;
-    // }
-    // Mat pG_fr = Mat::ones(3, opt.fr_pixels_texture.size(), CV_64FC1);
-    // for (int i = 0; i < opt.fr_pixels_texture.size(); i++)
-    // {
-    //     pG_fr.at<double>(0, i) = opt.fr_pixels_texture[i].first.x;
-    //     pG_fr.at<double>(1, i) = opt.fr_pixels_texture[i].first.y;
-    // }
-    // opt.pG_fr = pG_fr;
-    // Mat PG_fr = Mat::ones(4, opt.fr_pixels_texture.size(), CV_64FC1);
-    // PG_fr(cv::Rect(0, 0, opt.fr_pixels_texture.size(), 3)) =
-    //     opt.eigen2mat(opt.KG.inverse()) * pG_fr * opt.hf;
-    // opt.PG_fr = PG_fr;
-    //
-    // cout << "*********************************start "
-    //         "right*************************************"
-    //      << endl;
-    // double during1 = CameraOptimization(opt, CamID::R);
-    //
-    // cout << "*********************************start "
-    //         "left**************************************"
-    //      << endl;
-    // double during2 = CameraOptimization(opt, CamID::L);
-    //
-    // // back left field texture extraction
-    // int exposure_flag_bl = 1;  // if add exposure solution
-    // cv::imwrite(output + "/GB.png", GB);
-    // cv::imwrite(output + "/imgl_bev_rgb.png", opt.imgl_bev_rgb);
-    // extractor ext3(opt.imgl_bev_rgb, GB, add_semantic_segmentation_left,
-    //                exposure_flag_bl, size);
-    // if (add_semantic_segmentation_left)
-    // {
-    //     Mat mask_bl = imread(input + "/mask/left.png");
-    //     ext3.mask_ground.push_back(mask_bl);
-    // }
-    // ext3.Binarization();
-    // ext3.findcontours();
-    // opt.bl_pixels_texture = ext3.extrac_textures_and_save(
-    //     output + "/texture_bl.png", output + "/bl.csv");
-    // if (ext3.exposure_flag && ext3.ncoef > 0.5)
-    // {
-    //     opt.ncoef_bl = ext3.ncoef;
-    //     cout << "ncoef_bl:" << opt.ncoef_bl << endl;
-    // }
-    // else
-    // {
-    //     opt.ncoef_bl = 1;
-    //     cout << "ncoef_bl:" << opt.ncoef_bl << endl;
-    // }
-    // Mat pG_bl = Mat::ones(3, opt.bl_pixels_texture.size(), CV_64FC1);
-    // for (int i = 0; i < opt.bl_pixels_texture.size(); i++)
-    // {
-    //     pG_bl.at<double>(0, i) = opt.bl_pixels_texture[i].first.x;
-    //     pG_bl.at<double>(1, i) = opt.bl_pixels_texture[i].first.y;
-    // }
-    // opt.pG_bl = pG_bl;
-    // Mat PG_bl = Mat::ones(4, opt.bl_pixels_texture.size(), CV_64FC1);
-    // PG_bl(cv::Rect(0, 0, opt.bl_pixels_texture.size(), 3)) =
-    //     opt.eigen2mat(opt.KG.inverse()) * pG_bl * opt.hl;
-    // opt.PG_bl = PG_bl;
-    //
-    // // back right field texture extraction
-    // int exposure_flag_br = 1;  // if add exposure solution
-    // cv::imwrite(output + "/GB.png", GB);
-    // cv::imwrite(output + "/imgr_bev_rgb.png", opt.imgr_bev_rgb);
-    // extractor ext4(opt.imgr_bev_rgb, GB, add_semantic_segmentation_right,
-    //                exposure_flag_br, size);
-    // if (add_semantic_segmentation_right)
-    // {
-    //     Mat mask_br = imread(input + "/mask/right.png");
-    //     ext4.mask_ground.push_back(mask_br);
-    // }
-    // ext4.Binarization();
-    // ext4.findcontours();
-    // opt.br_pixels_texture = ext4.extrac_textures_and_save(
-    //     output + "/texture_br.png", output + "/br.csv");
-    // // opt.br_pixels_texture=opt.readfromcsv(prefix+"/br.csv");
-    // if (ext4.exposure_flag && ext4.ncoef > 0.5)
-    // {
-    //     opt.ncoef_br = ext4.ncoef;
-    //     cout << "ncoef_br:" << opt.ncoef_br << endl;
-    // }
-    // else
-    // {
-    //     opt.ncoef_br = 1;
-    //     cout << "ncoef_br:" << opt.ncoef_br << endl;
-    // }
-    // Mat pG_br = Mat::ones(3, opt.br_pixels_texture.size(), CV_64FC1);
-    // for (int i = 0; i < opt.br_pixels_texture.size(); i++)
-    // {
-    //     pG_br.at<double>(0, i) = opt.br_pixels_texture[i].first.x;
-    //     pG_br.at<double>(1, i) = opt.br_pixels_texture[i].first.y;
-    // }
-    // opt.pG_br = pG_br;
-    // Mat PG_br = Mat::ones(4, opt.br_pixels_texture.size(), CV_64FC1);
-    // PG_br(cv::Rect(0, 0, opt.br_pixels_texture.size(), 3)) =
-    //     opt.eigen2mat(opt.KG.inverse()) * pG_br * opt.hr;
-    // opt.PG_br = PG_br;
-    //
-    // cout << "*********************************start "
-    //         "behind***********************************"
-    //      << endl;
-    // double during3 = CameraOptimization(opt, CamID::B);
-    //
-    // cout << "************************online calibration "
-    //         "finished!!!**************************"
-    //      << endl;
-    // cout << "total calibration time:" << during1 + during2 + during3 << "s"
-    //      << endl;
-    //
-    // printf("==================================================================="
-    //        "==\n");
-    // std::cout << "GT Extrinsics:\n" << opt.gtExt[CamID::B] << "\n";
-    // std::cout << "Opt Extrinsics:\n" << opt.optExt[CamID::B] << "\n";
-    //
-    // printf("==================================================================="
-    //        "==\n");
-    //
-    // // Open a file for writing
-    // std::ofstream outputFile(output + "/errors.txt");
-    //
-    // // Check if the file is successfully opened
-    // if (!outputFile.is_open())
-    // {
-    //     std::cerr << "Error opening the file for writing." << std::endl;
-    //     return 1;  // Exit with an error code
-    // }
-    //
-    // outputFile << "CamID - Translation error - Rotation error" << std::endl;
-    //
-    // std::array<std::pair<double, double>, 4> errors;
-    // errors[CamID::F] =
-    //     util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
-    // errors[CamID::L] =
-    //     util::calculateError(opt.initExt[CamID::L], opt.gtExt[CamID::L]);
-    // errors[CamID::B] =
-    //     util::calculateError(opt.initExt[CamID::B], opt.gtExt[CamID::B]);
-    // errors[CamID::R] =
-    //     util::calculateError(opt.initExt[CamID::R], opt.gtExt[CamID::R]);
-    // printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::F].first, errors[CamID::F].second);
-    // printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::L].first, errors[CamID::L].second);
-    // printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::B].first, errors[CamID::B].second);
-    // printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::R].first, errors[CamID::R].second);
-    //
-    // outputFile << "Before error" << std::endl;
-    // outputFile << "F: " << errors[CamID::F].first << " "
-    //            << errors[CamID::F].second << std::endl;
-    // outputFile << "L: " << errors[CamID::L].first << " "
-    //            << errors[CamID::L].second << std::endl;
-    // outputFile << "B: " << errors[CamID::B].first << " "
-    //            << errors[CamID::B].second << std::endl;
-    // outputFile << "R: " << errors[CamID::R].first << " "
-    //            << errors[CamID::R].second << std::endl;
-    // printf("==================================================================="
-    //        "==\n");
-    // errors[CamID::F] =
-    //     util::calculateError(opt.initExt[CamID::F], opt.gtExt[CamID::F]);
-    // errors[CamID::L] =
-    //     util::calculateError(opt.optExt[CamID::L], opt.gtExt[CamID::L]);
-    // errors[CamID::B] =
-    //     util::calculateError(opt.optExt[CamID::B], opt.gtExt[CamID::B]);
-    // errors[CamID::R] =
-    //     util::calculateError(opt.optExt[CamID::R], opt.gtExt[CamID::R]);
-    // printf("CamID::F - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::F].first, errors[CamID::F].second);
-    // printf("CamID::L - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::L].first, errors[CamID::L].second);
-    // printf("CamID::B - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::B].first, errors[CamID::B].second);
-    // printf("CamID::R - Translation error: %.5f - Rotation Error: %.5f\n",
-    //        errors[CamID::R].first, errors[CamID::R].second);
-    // outputFile << "After error" << std::endl;
-    // outputFile << "F: " << errors[CamID::F].first << " "
-    //            << errors[CamID::F].second << std::endl;
-    // outputFile << "L: " << errors[CamID::L].first << " "
-    //            << errors[CamID::L].second << std::endl;
-    // outputFile << "B: " << errors[CamID::B].first << " "
-    //            << errors[CamID::B].second << std::endl;
-    // outputFile << "R: " << errors[CamID::R].first << " "
-    //            << errors[CamID::R].second << std::endl;
-    // printf("==================================================================="
-    //        "==\n");
-    //
-    // // Generate LUT
-    // for (size_t i = 0; i < CamID::NUM_CAM; i++)
-    // {
-    //     auto camId           = static_cast<CamID>(i);
-    //     Eigen::Matrix3d matR = opt.optExt[camId].block<3, 3>(0, 0);
-    //     Eigen::Vector3d vecT = opt.optExt[camId].block<3, 1>(0, 3);
-    //     lut::genLUT(matR, vecT, opt.intrinsics[camId],
-    //                 opt.distortion_params[camId],
-    //                 output + "/map" + std::to_string((int)camId) + ".txt");
-    // }
-    //
-    // // Close the file
-    // outputFile.close();
-    //
-    // std::cout << "Data written to the file successfully." << std::endl;
-    //
-    // opt.SaveOptResult(output + "/after_all_calib");
-    //
-    // // using namespace perception::imgproc;
-    // // auto config = std::make_shared<PerceptionConfig>();
-    // // util::LoadProtoFromASCIIFile(
-    // //     "/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/config/"
-    // //     "perception_config.textproto",
-    // //     config.get());
-    // //
-    // // auto imgprocContext = std::make_unique<ImageProcessorContext>(
-    // //     std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
-    // //     std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
-    // //
-    // // if (!imgprocContext->init())
-    // // {
-    // //     LOG_ERROR("Failed to initialize image processor context!");
-    // //     throw std::runtime_error("Cannot init attributes");
-    // // }
-    // // cv::Mat imgTop;
-    // // imgprocContext->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
-    // //
-    // // cv::imwrite(output + "topview.png", imgTop);
+    return 0;
 }

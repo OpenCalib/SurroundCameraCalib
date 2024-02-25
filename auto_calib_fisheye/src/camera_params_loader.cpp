@@ -7,7 +7,10 @@ void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec,
                std::vector<double>& tvec)
 {
     Eigen::Matrix4d rot90;
-    rot90 << 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
+    rot90 << 0, 1, 0, 0, 
+            -1, 0, 0, 0, 
+             0, 0, 1, 0, 
+             0, 0, 0, 1;
     double c_y   = cos(rvec[0]);
     double s_y   = sin(rvec[0]);
     double c_r   = cos(rvec[2]);
@@ -30,7 +33,8 @@ void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec,
     matrix(3, 1) = 0;
     matrix(3, 2) = 0;
     matrix(3, 3) = 1;
-    // matrix       = matrix * rot90;
+    matrix       = matrix * rot90;
+    printf("test\n");
 }
 
 void load_extrinsics(const std::string& extrinsics_dir,

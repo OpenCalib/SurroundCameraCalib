@@ -8,6 +8,8 @@ SET(CMAKE_BUILD_TYPE "Debug")
 
 enable_language(CUDA)
 
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo")
+
 include_directories("/usr/include/eigen3")
 find_package(OpenCV REQUIRED HINTS /opt/opencv/opencv-3.4.5)
 

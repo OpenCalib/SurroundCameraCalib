@@ -128,7 +128,7 @@ SegmentImageProcessorCuda::~SegmentImageProcessorCuda()
     }
 }
 
-bool SegmentImageProcessorCuda::init()
+bool SegmentImageProcessorCuda::init(const UVLists& uvLists)
 {
     for (int id = 0; id < NUM_CAMS; id++)
     {

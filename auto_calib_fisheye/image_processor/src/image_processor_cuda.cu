@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2020 - 2023, VINAI Artificial Intelligence Application and Research JSC.
- * All rights reserved. All information contained here is proprietary and confidential to VinAI.
- * Any use, reproduction, or disclosure without the written permission
- * of VinAI is prohibited.
+ * Copyright (c) 2020 - 2023, VINAI Artificial Intelligence Application and
+ * Research JSC. All rights reserved. All information contained here is
+ * proprietary and confidential to VinAI. Any use, reproduction, or disclosure
+ * without the written permission of VinAI is prohibited.
  */
 #include <cuda_runtime_api.h>
 
@@ -34,43 +34,40 @@ constexpr int THREADS_PER_BLOCK_Y = 32;
 constexpr int COLS_PER_THREAD     = 1;
 constexpr int ROWS_PER_THREAD     = 1;
 
-static __global__ void remapAndMaskImage(const unsigned char* __restrict fisheyePtr,
-                                         const short* __restrict mapPtr,
-                                         const float* __restrict maskPtr,
-                                         float* __restrict midtopPtr)
+static __global__ void remapAndMaskImage(
+    const unsigned char* __restrict fisheyePtr, const short* __restrict mapPtr,
+    const float* __restrict maskPtr, float* __restrict midtopPtr)
 {
-    const int y0 = ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y);
-    int y1       = ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y + 1);
-    const int x0 = COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x);
-    int x1       = COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x + 1);
+    // pixel-wise on topview image (800x900)
+    const int x = blockDim.x * blockIdx.x + threadIdx.x;
+    const int y = blockDim.y * blockIdx.y + threadIdx.y;
 
-    x1 = (x1 < TOP_COLS) ? x1 : TOP_COLS;
-    y1 = (y1 < TOP_ROWS) ? y1 : TOP_ROWS;
-    for (int y = y0; y < y1; y++)
+    if (x < 0 || x >= TOP_COLS || y < 0 || y >= TOP_ROWS)
     {
-        for (int x = x0; x < x1; x++)
-        {
-            const int mapID    = MAP_CHANNELS * (y * MAP_COLS + x);
-            const short coordX = mapPtr[mapID + 0];
-            const short coordY = mapPtr[mapID + 1];
-            if ((coordX < 0) || (coordX > FISHEYE_COLS - 1) || (coordY < 0) ||
-                (coordY > FISHEYE_ROWS - 1))
-            {
-                continue;
-            }
-
-            const int fisheyeID  = FISHEYE_CHANNELS * (coordY * FISHEYE_COLS + coordX);
-            const int topID      = TOP_CHANNELS * (y * TOP_COLS + x);
-            const int maskID     = MASK_CHANNELS * (y * MASK_COLS + x);
-            const auto intensR   = fisheyePtr[fisheyeID + 0];
-            const auto intensG   = fisheyePtr[fisheyeID + 1];
-            const auto intensB   = fisheyePtr[fisheyeID + 2];
-            const auto alpha     = maskPtr[maskID];
-            midtopPtr[topID + 0] = intensR * alpha;
-            midtopPtr[topID + 1] = intensG * alpha;
-            midtopPtr[topID + 2] = intensB * alpha;
-        }
+        return;
     }
+
+    const int mapID = MAP_CHANNELS * (y * MAP_COLS + x);
+
+    const short coordX = mapPtr[mapID + 0];
+    const short coordY = mapPtr[mapID + 1];
+
+    if (coordX < 0 || coordX > FISHEYE_COLS - 1 || coordY < 0 ||
+        coordY > FISHEYE_ROWS - 1)
+    {
+        return;
+    }
+
+    const int fisheyeID  = FISHEYE_CHANNELS * (coordY * FISHEYE_COLS + coordX);
+    const int topID      = TOP_CHANNELS * (y * TOP_COLS + x);
+    const int maskID     = MASK_CHANNELS * (y * MASK_COLS + x);
+    const auto intensR   = fisheyePtr[fisheyeID + 0];
+    const auto intensG   = fisheyePtr[fisheyeID + 1];
+    const auto intensB   = fisheyePtr[fisheyeID + 2];
+    const auto alpha     = maskPtr[maskID];
+    midtopPtr[topID + 0] = intensR * alpha;
+    midtopPtr[topID + 1] = intensG * alpha;
+    midtopPtr[topID + 2] = intensB * alpha;
 }
 
 static __global__ void combineImagePortion(const float* __restrict midtop0Ptr,
@@ -79,10 +76,14 @@ static __global__ void combineImagePortion(const float* __restrict midtop0Ptr,
                                            const float* __restrict midtop3Ptr,
                                            unsigned char* __restrict topPtr)
 {
-    const int y0 = ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y);
-    int y1       = ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y + 1);
-    const int x0 = COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x);
-    int x1       = COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x + 1);
+    const int y0 =
+        ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y);
+    int y1 =
+        ROWS_PER_THREAD * (THREADS_PER_BLOCK_Y * blockIdx.y + threadIdx.y + 1);
+    const int x0 =
+        COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x);
+    int x1 =
+        COLS_PER_THREAD * (THREADS_PER_BLOCK_X * blockIdx.x + threadIdx.x + 1);
 
     x1 = (x1 < TOP_COLS) ? x1 : TOP_COLS;
     y1 = (y1 < TOP_ROWS) ? y1 : TOP_ROWS;
@@ -93,14 +94,15 @@ static __global__ void combineImagePortion(const float* __restrict midtop0Ptr,
             const int id = TOP_CHANNELS * (y * TOP_COLS + x);
             for (int z = 0; z < TOP_CHANNELS; z++)
             {
-                topPtr[id + z] = midtop0Ptr[id + z] + midtop1Ptr[id + z] + midtop2Ptr[id + z] +
-                                 midtop3Ptr[id + z];
+                topPtr[id + z] = midtop0Ptr[id + z] + midtop1Ptr[id + z] +
+                                 midtop2Ptr[id + z] + midtop3Ptr[id + z];
             }
         }
     }
 }
 
-ImageProcessorCuda::ImageProcessorCuda(const ImageProcessorConfig& config) : IImageProcessor(config)
+ImageProcessorCuda::ImageProcessorCuda(const ImageProcessorConfig& config)
+    : IImageProcessor(config)
 {
     calibDir = config.calib_dir();
 }
@@ -116,27 +118,40 @@ ImageProcessorCuda::~ImageProcessorCuda()
     }
 }
 
-bool ImageProcessorCuda::init()
+bool ImageProcessorCuda::init(const UVLists& uvLists)
 {
     for (int id = 0; id < NUM_CAMS; id++)
     {
+        const int mapSize = uvLists[id].size() * sizeof(short);
+        cudaMalloc((void**)&mapPtr[id], mapSize);
+        cudaMemcpy(mapPtr[id], uvLists[id].data(), mapSize,
+                   cudaMemcpyHostToDevice);
+        GET_LAST_CUDA_ERRORS();
+
         // Load and copy maps and masks to device memory
-        mapPtr[id]  = loadAndCopyMap(calibDir + "topview_rgb/map" + std::to_string(id) + ".txt",
-                                    MAP_COLS, MAP_ROWS);
-        maskPtr[id] = loadAndCopyMask(calibDir + "topview_rgb/mask" + std::to_string(id) + ".png");
+        mapPtr[id] = loadAndCopyMap(
+            calibDir + "topview_rgb/map" + std::to_string(id) + ".txt",
+            MAP_COLS, MAP_ROWS);
+        maskPtr[id] = loadAndCopyMask(calibDir + "topview_rgb/mask" +
+                                      std::to_string(id) + ".png");
+        GET_LAST_CUDA_ERRORS();
 
         // Allocate pinned memory for fisheye images
         fisheyePtr[id] = allocateFisheye();
+        GET_LAST_CUDA_ERRORS();
 
         // Allocate device memory to mid-topviews
         midtopPtr[id] = allocateMidtopview(TOP_ROWS * TOP_COLS * TOP_CHANNELS);
+        GET_LAST_CUDA_ERRORS();
     }
 
     return true;
 }
 
-void ImageProcessorCuda::createTopViewImage(const cv::Mat& fisheye0, const cv::Mat& fisheye1,
-                                            const cv::Mat& fisheye2, const cv::Mat& fisheye3,
+void ImageProcessorCuda::createTopViewImage(const cv::Mat& fisheye0,
+                                            const cv::Mat& fisheye1,
+                                            const cv::Mat& fisheye2,
+                                            const cv::Mat& fisheye3,
                                             cv::Mat& topImg)
 {
     // Allocate device memory to topview
@@ -155,25 +170,47 @@ void ImageProcessorCuda::createTopViewImage(const cv::Mat& fisheye0, const cv::M
     const cv::Mat fisheye[NUM_CAMS] = {fisheye0, fisheye1, fisheye2, fisheye3};
     for (int id = 0; id < NUM_CAMS; id++)
     {
+        GET_LAST_CUDA_ERRORS();
         cudaMemcpyAsync((void*)fisheyePtr[id], fisheye[id].data,
-                        fisheye[id].total() * fisheye[id].elemSize(), cudaMemcpyHostToDevice,
-                        topStream[id]);
+                        fisheye[id].total() * fisheye[id].elemSize(),
+                        cudaMemcpyHostToDevice, topStream[id]);
+        GET_LAST_CUDA_ERRORS();
         remapAndMaskImage<<<dim3{BLOCKS_PER_DIM_X, BLOCKS_PER_DIM_Y, 1},
-                            dim3{THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y, 1}, 0, topStream[id]>>>(
-            fisheyePtr[id], mapPtr[id], maskPtr[id], midtopPtr[id]);
+                            dim3{THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y, 1},
+                            0, topStream[id]>>>(fisheyePtr[id], mapPtr[id],
+                                                maskPtr[id], midtopPtr[id]);
+        GET_LAST_CUDA_ERRORS();
+        // float* hMidTop = new float[TOP_COLS * TOP_ROWS * TOP_CHANNELS];
+        // cudaMemcpy(hMidTop, midtopPtr[id],
+        //            TOP_ROWS * TOP_COLS * TOP_CHANNELS * sizeof(float),
+        //            cudaMemcpyDeviceToHost);
+        // GET_LAST_CUDA_ERRORS();
+        // cudaDeviceSynchronize();
+        // cv::Mat charMat(TOP_ROWS, TOP_COLS, CV_8UC3);
+        // for (size_t i = 0; i < TOP_ROWS * TOP_COLS * TOP_CHANNELS; ++i)
+        // {
+        //     charMat.data[i] = uchar(hMidTop[i] * 255);
+        // }
+        //
+        // cv::imwrite("/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/"
+        //             "out/lut_debug/midtop" +
+        //                 std::to_string(id) + ".png",
+        //             charMat);
     }
     cudaDeviceSynchronize();
+    GET_LAST_CUDA_ERRORS();
     for (int id = 0; id < NUM_CAMS; id++)
     {
         cudaStreamDestroy(topStream[id]);
+        GET_LAST_CUDA_ERRORS();
     }
-    GET_LAST_CUDA_ERRORS();
 
     // Perform topview generation: combining
     combineImagePortion<<<dim3{BLOCKS_PER_DIM_X, BLOCKS_PER_DIM_Y, 1},
                           dim3{THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y, 1}>>>(
         midtopPtr[0], midtopPtr[1], midtopPtr[2], midtopPtr[3], topPtr);
-    cudaMemcpy(topImg.data, topPtr, topImg.total() * topImg.elemSize(), cudaMemcpyDeviceToHost);
+    cudaMemcpy(topImg.data, topPtr, topImg.total() * topImg.elemSize(),
+               cudaMemcpyDeviceToHost);
     GET_LAST_CUDA_ERRORS();
 
     // Free resources

@@ -1,17 +1,19 @@
 /*
- * Copyright (c) 2020 - 2023, VINAI Artificial Intelligence Application and Research JSC.
- * All rights reserved. All information contained here is proprietary and confidential to VinAI.
- * Any use, reproduction, or disclosure without the written permission
- * of VinAI is prohibited.
+ * Copyright (c) 2020 - 2023, VINAI Artificial Intelligence Application and
+ * Research JSC. All rights reserved. All information contained here is
+ * proprietary and confidential to VinAI. Any use, reproduction, or disclosure
+ * without the written permission of VinAI is prohibited.
  */
 #include <cuda_runtime_api.h>
 
 #include <fstream>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include "cuda_utils.h"
 
 namespace perception {
 namespace imgproc {
+
 short* loadAndCopyMap(const std::string& fileName, int mapCols, int mapRows)
 {
     cv::Mat map(mapRows, mapCols, CV_16SC2);
@@ -33,6 +35,7 @@ short* loadAndCopyMap(const std::string& fileName, int mapCols, int mapRows)
     short* mapPtr;
     cudaMalloc((void**)&mapPtr, mapSize);
     cudaMemcpy(mapPtr, map.data, mapSize, cudaMemcpyHostToDevice);
+    GET_LAST_CUDA_ERRORS();
     return mapPtr;
 }
 
@@ -44,6 +47,7 @@ float* loadAndCopyMask(const std::string& fileName)
     float* maskPtr;
     cudaMalloc((void**)&maskPtr, maskSize);
     cudaMemcpy(maskPtr, mask.data, maskSize, cudaMemcpyHostToDevice);
+    GET_LAST_CUDA_ERRORS();
     return maskPtr;
 }
 
@@ -53,7 +57,9 @@ float* allocateMidtopview(size_t numPixels)
     const int midtopSize = numPixels * sizeof(float);
     cudaMalloc((void**)&midtopPtr, midtopSize);
     cudaMemset(midtopPtr, 0, midtopSize);
+    GET_LAST_CUDA_ERRORS();
     return midtopPtr;
 }
+
 }  // namespace imgproc
 }  // namespace perception

@@ -40,7 +40,7 @@ SegmentImageProcessor::~SegmentImageProcessor()
     releaseResource();
 }
 
-bool SegmentImageProcessor::init()
+bool SegmentImageProcessor::init(const UVLists& uvLists)
 {
     initTopViewStitching();
 

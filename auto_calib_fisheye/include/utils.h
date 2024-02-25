@@ -11,6 +11,7 @@
 #include <Eigen/Dense>
 #include "optimizer.h"
 #include "transform_util.h"
+#include "defines.h"
 
 namespace util {
 

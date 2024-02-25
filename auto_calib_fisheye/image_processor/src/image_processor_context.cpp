@@ -18,14 +18,14 @@ ImageProcessorContext::ImageProcessorContext(
 {
 }
 
-bool ImageProcessorContext::init()
+bool ImageProcessorContext::init(const UVLists& uvLists)
 {
-    if (!imgProcessor_->init())
+    if (!imgProcessor_->init(uvLists))
     {
         LOG_ERROR("Failed to initialize image processor!");
         return false;
     }
-    if (!segImgProcessor_->init())
+    if (!segImgProcessor_->init(uvLists))
     {
         LOG_ERROR("Failed to initialize segmentation image processor!");
         return false;

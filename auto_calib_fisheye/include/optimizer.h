@@ -7,18 +7,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include "image_processor_cuda.h"
+#include "defines.h"
 
 using namespace cv;
 using namespace std;
-
-enum CamID : size_t
-{
-    F = 0,
-    L,
-    B,
-    R,
-    NUM_CAM
-};
 
 class Optimizer
 {
