@@ -3,14 +3,10 @@
 
 #include "camera_params_loader.h"
 
-void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec,
-               std::vector<double>& tvec)
+void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec, std::vector<double>& tvec)
 {
     Eigen::Matrix4d rot90;
-    rot90 << 0, 1, 0, 0, 
-            -1, 0, 0, 0, 
-             0, 0, 1, 0, 
-             0, 0, 0, 1;
+    rot90 << 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1;
     double c_y   = cos(rvec[0]);
     double s_y   = sin(rvec[0]);
     double c_r   = cos(rvec[2]);
@@ -36,10 +32,8 @@ void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec,
     matrix       = matrix * rot90;
 }
 
-void load_extrinsics(const std::string& extrinsics_dir,
-                     Eigen::Matrix4d& left_extrinsics,
-                     Eigen::Matrix4d& front_extrinsic,
-                     Eigen::Matrix4d& back_extrinsics,
+void load_extrinsics(const std::string& extrinsics_dir, Eigen::Matrix4d& left_extrinsics,
+                     Eigen::Matrix4d& front_extrinsic, Eigen::Matrix4d& back_extrinsics,
                      Eigen::Matrix4d& right_extrinsics)
 {
     std::vector<double> rvec(3);

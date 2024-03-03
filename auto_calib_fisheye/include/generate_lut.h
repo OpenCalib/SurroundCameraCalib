@@ -5,13 +5,11 @@
 
 namespace lut {
 
-void genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
-            const Eigen::Matrix3d& matK, const std::vector<double>& matD,
-            const std::string& lutOutputFile);
+void genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT, const Eigen::Matrix3d& matK,
+            const std::vector<double>& matD, const std::string& lutOutputFile);
 
-void genLUT(CamID camPos, const Eigen::Matrix3d& matR,
-            const Eigen::Vector3d& vecT, const Eigen::Matrix3d& matK,
-            const std::vector<double>& matD, std::vector<short>& uvList,
-            const std::string& lutOutputFile, bool isSeg);
+void genLUT(CamID camPos, const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
+            const Eigen::Matrix3d& matK, const std::vector<double>& matD,
+            std::vector<short>& uvList, const std::string& lutOutputFile, bool isSeg);
 
 }  // namespace lut

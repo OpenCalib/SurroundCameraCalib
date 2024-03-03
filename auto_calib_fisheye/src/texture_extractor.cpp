@@ -1,8 +1,8 @@
 #include "texture_extractor.h"
 #include <algorithm>
 #include <fstream>
-extractor::extractor(Mat img1_bev_, Mat img2_bev_, int edge_flag_,
-                     int exposure_flag_, vector<double> size)
+extractor::extractor(Mat img1_bev_, Mat img2_bev_, int edge_flag_, int exposure_flag_,
+                     vector<double> size)
 {
     img1_bev = img1_bev_;
     img2_bev = img2_bev_;
@@ -69,8 +69,7 @@ void extractor::findcontours()
     // dilate(bin_of_imgs,dilate_img,dilate_kernel);
     Mat erode_kernel = getStructuringElement(0, Size(7, 7));
     erode(bin_of_imgs, erode_img, erode_kernel, Point(-1, -1), 2);
-    cv::findContours(erode_img, contours, cv::noArray(), CV_RETR_EXTERNAL,
-                     CV_CHAIN_APPROX_NONE);
+    cv::findContours(erode_img, contours, cv::noArray(), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
 
     int maxsize = 50;
     int index   = 0;
@@ -168,8 +167,8 @@ std::vector<std::vector<cv::Point>> extractor::fillContour(
     return fill_con;
 }
 
-vector<pair<cv::Point, double>> extractor::extrac_textures_and_save(
-    string pic_filename, string csv_filename)
+vector<pair<cv::Point, double>> extractor::extrac_textures_and_save(string pic_filename,
+                                                                    string csv_filename)
 {
     int down_sample = 800;
     Mat gray1, gray2;
@@ -213,22 +212,19 @@ vector<pair<cv::Point, double>> extractor::extrac_textures_and_save(
             // mask-filter
             for (auto mask : mask_ground)
             {
-                if (mask.at<Vec3b>(pixel.y, pixel.x) == Vec3b(255, 255, 255))
-                    flag_ground = 1;
+                if (mask.at<Vec3b>(pixel.y, pixel.x) == Vec3b(255, 255, 255)) flag_ground = 1;
             }
         }
 
         if (flag_ground || !edge_flag)
         {
-            if (pixel.x < 10 || pixel.y < 10 ||
-                (pixel.x + 10) > img1_bev.cols ||
+            if (pixel.x < 10 || pixel.y < 10 || (pixel.x + 10) > img1_bev.cols ||
                 (pixel.y + 10) > img1_bev.rows)
                 continue;
 
-            Eigen::Vector2d delta((gray1.ptr<uchar>(pixel.y)[pixel.x] -
-                                   gray1.ptr<uchar>(pixel.y)[pixel.x - 2]),
-                                  (gray1.ptr<uchar>(pixel.y)[pixel.x] -
-                                   gray1.ptr<uchar>(pixel.y - 2)[pixel.x]));
+            Eigen::Vector2d delta(
+                (gray1.ptr<uchar>(pixel.y)[pixel.x] - gray1.ptr<uchar>(pixel.y)[pixel.x - 2]),
+                (gray1.ptr<uchar>(pixel.y)[pixel.x] - gray1.ptr<uchar>(pixel.y - 2)[pixel.x]));
             if (delta.norm() < 15) continue;
             pair<cv::Point, double> pixel_g(pixel, delta.norm());
             texture.push_back(pixel_g);
@@ -278,7 +274,7 @@ vector<pair<cv::Point, double>> extractor::extrac_textures_and_save(
 
     // cout<<"max_norm:"<<max_norm<<endl;
     // cout<<"min_norm:"<<min_norm<<endl;
-    imwrite(pic_filename,show);
+    imwrite(pic_filename, show);
     // writetocsv(csv_filename,texture_down);
     return texture_down;
 }
@@ -298,8 +294,7 @@ bool extractor::local_pixel_test(vector<pair<cv::Point, double>> texture,
     {
         for (int j = -1; j <= 1; j++)
         {
-            if (find(texture_.begin(), texture_.end(), Point(x + i, y + j)) !=
-                texture_.end())
+            if (find(texture_.begin(), texture_.end(), Point(x + i, y + j)) != texture_.end())
             {
                 return true;
             }

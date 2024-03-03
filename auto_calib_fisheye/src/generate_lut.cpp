@@ -32,24 +32,19 @@ void lut::genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
             float vecPointTransformed[3];
             vecPointTransformed[0] = matR(0, 0) * vecWorldPosRotate[0] +
                                      matR(0, 1) * vecWorldPosRotate[1] +
-                                     matR(0, 2) * vecWorldPosRotate[2] +
-                                     vecT[0];
+                                     matR(0, 2) * vecWorldPosRotate[2] + vecT[0];
             vecPointTransformed[1] = matR(1, 0) * vecWorldPosRotate[0] +
                                      matR(1, 1) * vecWorldPosRotate[1] +
-                                     matR(1, 2) * vecWorldPosRotate[2] +
-                                     vecT[1];
+                                     matR(1, 2) * vecWorldPosRotate[2] + vecT[1];
             vecPointTransformed[2] = matR(2, 0) * vecWorldPosRotate[0] +
                                      matR(2, 1) * vecWorldPosRotate[1] +
-                                     matR(2, 2) * vecWorldPosRotate[2] +
-                                     vecT[2];
-            float lenVec3D =
-                sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
-                     vecPointTransformed[1] * vecPointTransformed[1] +
-                     vecPointTransformed[2] * vecPointTransformed[2]);
-            float lenVec2D =
-                sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
-                     vecPointTransformed[1] * vecPointTransformed[1]);
-            float ratio = 0.0;
+                                     matR(2, 2) * vecWorldPosRotate[2] + vecT[2];
+            float lenVec3D = sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
+                                  vecPointTransformed[1] * vecPointTransformed[1] +
+                                  vecPointTransformed[2] * vecPointTransformed[2]);
+            float lenVec2D = sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
+                                  vecPointTransformed[1] * vecPointTransformed[1]);
+            float ratio    = 0.0;
             float xd, yd;
             std::vector<int> vecPoint2D(2, 0.0);
             float theta = 0.0f;
@@ -59,11 +54,9 @@ void lut::genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
                 theta = asin(ratio);
                 if (vecPointTransformed[2] < 0) theta = M_PI - theta;
                 float thetaSq = theta * theta;
-                float cdist =
-                    theta *
-                    (1.0 + matD[0] * thetaSq + matD[1] * thetaSq * thetaSq +
-                     matD[2] * thetaSq * thetaSq * thetaSq +
-                     matD[3] * thetaSq * thetaSq * thetaSq * thetaSq);
+                float cdist   = theta * (1.0 + matD[0] * thetaSq + matD[1] * thetaSq * thetaSq +
+                                       matD[2] * thetaSq * thetaSq * thetaSq +
+                                       matD[3] * thetaSq * thetaSq * thetaSq * thetaSq);
                 xd            = vecPointTransformed[0] / lenVec2D * cdist;
                 yd            = vecPointTransformed[1] / lenVec2D * cdist;
                 vecPoint2D[0] = int(matK(0, 0) * xd + matK(0, 2));
@@ -79,8 +72,7 @@ void lut::genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
             {
                 // listUVs.at(y * TOPVIEW_W * 10 + x) =
                 // std::make_pair(int(vecPoint2D[0]), int(vecPoint2D[1]));
-                outputFile << int(vecPoint2D[0]) << " " << int(vecPoint2D[1])
-                           << "\n";
+                outputFile << int(vecPoint2D[0]) << " " << int(vecPoint2D[1]) << "\n";
             }
             else
             {
@@ -93,10 +85,9 @@ void lut::genLUT(const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
     outputFile.close();
 }
 
-void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR,
-                 const Eigen::Vector3d& vecT, const Eigen::Matrix3d& matK,
-                 const std::vector<double>& matD, std::vector<short>& uvList,
-                 const std::string& lutOutputFile, bool isSeg)
+void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR, const Eigen::Vector3d& vecT,
+                 const Eigen::Matrix3d& matK, const std::vector<double>& matD,
+                 std::vector<short>& uvList, const std::string& lutOutputFile, bool isSeg)
 {
     std::ofstream outputFile(lutOutputFile);
 
@@ -125,8 +116,8 @@ void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR,
 
     if (uvList.size() != LUT_W * LUT_H * 2)
     {
-        LOG_ERROR("uvList.size() not matching actual size. {} vs {}",
-                  uvList.size(), LUT_W * LUT_H * 2);
+        LOG_ERROR("uvList.size() not matching actual size. {} vs {}", uvList.size(),
+                  LUT_W * LUT_H * 2);
     }
 
     for (int i = 0; i < LUT_H; i++)
@@ -140,25 +131,20 @@ void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR,
             std::vector<float> vecPointTransformed(3);
             vecPointTransformed[0] = matR(0, 0) * vecWorldPosRotate[0] +
                                      matR(0, 1) * vecWorldPosRotate[1] +
-                                     matR(0, 2) * vecWorldPosRotate[2] +
-                                     vecT[0];
+                                     matR(0, 2) * vecWorldPosRotate[2] + vecT[0];
             vecPointTransformed[1] = matR(1, 0) * vecWorldPosRotate[0] +
                                      matR(1, 1) * vecWorldPosRotate[1] +
-                                     matR(1, 2) * vecWorldPosRotate[2] +
-                                     vecT[1];
+                                     matR(1, 2) * vecWorldPosRotate[2] + vecT[1];
             vecPointTransformed[2] = matR(2, 0) * vecWorldPosRotate[0] +
                                      matR(2, 1) * vecWorldPosRotate[1] +
-                                     matR(2, 2) * vecWorldPosRotate[2] +
-                                     vecT[2];
+                                     matR(2, 2) * vecWorldPosRotate[2] + vecT[2];
             //? Mr.Vinh
-            float lenVec3D =
-                sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
-                     vecPointTransformed[1] * vecPointTransformed[1] +
-                     vecPointTransformed[2] * vecPointTransformed[2]);
-            float lenVec2D =
-                sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
-                     vecPointTransformed[1] * vecPointTransformed[1]);
-            float ratio = 0.0;
+            float lenVec3D = sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
+                                  vecPointTransformed[1] * vecPointTransformed[1] +
+                                  vecPointTransformed[2] * vecPointTransformed[2]);
+            float lenVec2D = sqrt(vecPointTransformed[0] * vecPointTransformed[0] +
+                                  vecPointTransformed[1] * vecPointTransformed[1]);
+            float ratio    = 0.0;
             float xd, yd;
             std::vector<int> vecPoint2D(2, 0);
             float theta = 0.0f;
@@ -168,13 +154,11 @@ void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR,
                 theta = asin(ratio);
                 if (vecPointTransformed[2] < 0) theta = M_PI - theta;
                 float thetaSq = theta * theta;
-                float cdist =
-                    theta *
-                    (1.0 + matD[0] * thetaSq + matD[1] * thetaSq * thetaSq +
-                     matD[2] * thetaSq * thetaSq * thetaSq +
-                     matD[3] * thetaSq * thetaSq * thetaSq * thetaSq);
-                xd = vecPointTransformed[0] / lenVec2D * cdist;
-                yd = vecPointTransformed[1] / lenVec2D * cdist;
+                float cdist   = theta * (1.0 + matD[0] * thetaSq + matD[1] * thetaSq * thetaSq +
+                                       matD[2] * thetaSq * thetaSq * thetaSq +
+                                       matD[3] * thetaSq * thetaSq * thetaSq * thetaSq);
+                xd            = vecPointTransformed[0] / lenVec2D * cdist;
+                yd            = vecPointTransformed[1] / lenVec2D * cdist;
 
                 vecPoint2D[0] = int((matK(0, 0) * xd + matK(0, 2)) * IMG_W / W);
                 vecPoint2D[1] = int((matK(1, 1) * yd + matK(1, 2)) * IMG_H / H);
@@ -195,8 +179,7 @@ void lut::genLUT(CamID camPos, const Eigen::Matrix3d& matR,
                     (camPos == 0 && theta < 85.0 * M_PI / 180) ||
                     (camPos == 3 && theta < 85.0 * M_PI / 180))
                 {
-                    outputFile << int(vecPoint2D[0]) << ", "
-                               << int(vecPoint2D[1]) << "\n";
+                    outputFile << int(vecPoint2D[0]) << ", " << int(vecPoint2D[1]) << "\n";
                     uvList.at(uvIndex * 2 + 0) = int(vecPoint2D[0]);
                     uvList.at(uvIndex * 2 + 1) = int(vecPoint2D[1]);
                 }

@@ -6,8 +6,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-#include "image_processor_cuda.h"
 #include "defines.h"
+#include "image_processor_cuda.h"
 
 using namespace cv;
 using namespace std;
@@ -154,10 +154,9 @@ public:
     double ncoef_fl, ncoef_fr, ncoef_bl, ncoef_br;
 
     // Optimizer();
-    Optimizer(const std::string &calibPath, const Mat *imgf, const Mat *imgl,
-              const Mat *imgb, const Mat *imgr, int camera_model_index,
-              int rows, int cols, CamID fixed_, int flag, string data_set,
-              int flag_add_disturbance, string prefix, string solution_model_);
+    Optimizer(const std::string &calibPath, const Mat *imgf, const Mat *imgl, const Mat *imgb,
+              const Mat *imgr, int camera_model_index, int rows, int cols, CamID fixed_, int flag,
+              string data_set, int flag_add_disturbance, string prefix, string solution_model_);
     ~Optimizer();
     void initializeK();
     void initializeD();
@@ -166,46 +165,35 @@ public:
     void initializeHeight();
     void initializetailsize();
     Mat tail(Mat img, CamID camId);
-    double CostFunction(const vector<double> var, CamID camId,
-                        Eigen::Matrix4d T);
+    double CostFunction(const vector<double> var, CamID camId, Eigen::Matrix4d T);
     void SaveOptResult(const string img_name);
     void show(CamID camId, string filename);
     Mat eigen2mat(Eigen::MatrixXd A);
     Mat gray_gamma(Mat img);
     Mat gray_atb(Mat img);
-    void world2cam(double point2D[2], double point3D[3], Eigen::Matrix3d K,
-                   vector<double> D);
+    void world2cam(double point2D[2], double point3D[3], Eigen::Matrix3d K, vector<double> D);
     void distortPoints(Mat &P_GC1, Mat &p_GC, Eigen::Matrix3d &K_C);
-    void distortPointsOcam(Mat &P_GC1, Mat &p_GC, Eigen::Matrix3d &K_C,
-                           vector<double> &D_C);
-    void random_search_params(int search_count, double roll_ep0,
-                              double roll_ep1, double pitch_ep0,
-                              double pitch_ep1, double yaw_ep0, double yaw_ep1,
-                              double t0_ep0, double t0_ep1, double t1_ep0,
-                              double t1_ep1, double t2_ep0, double t2_ep1,
-                              CamID camId);
-    void fine_random_search_params(int search_count, double roll_ep0,
-                                   double roll_ep1, double pitch_ep0,
-                                   double pitch_ep1, double yaw_ep0,
-                                   double yaw_ep1, double t0_ep0, double t0_ep1,
-                                   double t1_ep0, double t1_ep1, double t2_ep0,
-                                   double t2_ep1, CamID camId);
-    void best_random_search_params(int search_count, double roll_ep0,
-                                   double roll_ep1, double pitch_ep0,
-                                   double pitch_ep1, double yaw_ep0,
-                                   double yaw_ep1, double t0_ep0, double t0_ep1,
-                                   double t1_ep0, double t1_ep1, double t2_ep0,
-                                   double t2_ep1, CamID camId);
+    void distortPointsOcam(Mat &P_GC1, Mat &p_GC, Eigen::Matrix3d &K_C, vector<double> &D_C);
+    void random_search_params(int search_count, double roll_ep0, double roll_ep1, double pitch_ep0,
+                              double pitch_ep1, double yaw_ep0, double yaw_ep1, double t0_ep0,
+                              double t0_ep1, double t1_ep0, double t1_ep1, double t2_ep0,
+                              double t2_ep1, CamID camId);
+    void fine_random_search_params(int search_count, double roll_ep0, double roll_ep1,
+                                   double pitch_ep0, double pitch_ep1, double yaw_ep0,
+                                   double yaw_ep1, double t0_ep0, double t0_ep1, double t1_ep0,
+                                   double t1_ep1, double t2_ep0, double t2_ep1, CamID camId);
+    void best_random_search_params(int search_count, double roll_ep0, double roll_ep1,
+                                   double pitch_ep0, double pitch_ep1, double yaw_ep0,
+                                   double yaw_ep1, double t0_ep0, double t0_ep1, double t1_ep0,
+                                   double t1_ep1, double t2_ep0, double t2_ep1, CamID camId);
     Mat generate_surround_view(Mat img_GF, Mat img_GL, Mat img_GB, Mat img_GR);
     Mat generate_surround_viewX(Mat img_GF, Mat img_GL, Mat img_GB, Mat img_GR);
     vector<Point> readfromcsv(string filename);
     Mat Binarization(Mat img1, Mat img2);
-    Mat project_on_ground(Mat img, Eigen::Matrix4d T_CG, Eigen::Matrix3d K_C,
-                          vector<double> D_C, Eigen::Matrix3d K_G, int rows,
-                          int cols, float height);
-    double back_camera_and_compute_loss(Mat img1_bev_gray, Mat img1_bev_atb,
-                                        Mat img2_gray, Mat img2_atb,
-                                        Eigen::Matrix4d T, string idx);
+    Mat project_on_ground(Mat img, Eigen::Matrix4d T_CG, Eigen::Matrix3d K_C, vector<double> D_C,
+                          Eigen::Matrix3d K_G, int rows, int cols, float height);
+    double back_camera_and_compute_loss(Mat img1_bev_gray, Mat img1_bev_atb, Mat img2_gray,
+                                        Mat img2_atb, Eigen::Matrix4d T, string idx);
     double getPixelValue(Mat *image, float x, float y);
 };
 

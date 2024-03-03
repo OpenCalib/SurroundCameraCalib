@@ -30,4 +30,4 @@ enum CamID : uint32_t
     NUM_CAM
 };
 
-#endif // SVM_AUTORC_DEFINES_H
+#endif  // SVM_AUTORC_DEFINES_H

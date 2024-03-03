@@ -35,18 +35,16 @@ public:
 
     double sizef, sizel, sizeb, sizer;  // bev size of surround-cameras
 
-    extractor(Mat img1_bev, Mat img2_bev, int edge_flag, int exposure_flag,
-              vector<double> size);
+    extractor(Mat img1_bev, Mat img2_bev, int edge_flag, int exposure_flag, vector<double> size);
     ~extractor();
     void Binarization();
     void writetocsv(string filename, vector<Point> vec);
     void findcontours();
-    bool local_pixel_test(vector<pair<cv::Point, double>> texture,
-                          pair<cv::Point, double> pixel);
+    bool local_pixel_test(vector<pair<cv::Point, double>> texture, pair<cv::Point, double> pixel);
     std::vector<std::vector<cv::Point>> fillContour(
         const std::vector<std::vector<cv::Point>>& _contours);
-    vector<pair<cv::Point, double>> extrac_textures_and_save(
-        string pic_filename, string csv_filename);
+    vector<pair<cv::Point, double>> extrac_textures_and_save(string pic_filename,
+                                                             string csv_filename);
     static bool cmpx(Point p1, Point p2) { return p1.x < p2.x; };
     static bool cmpy(Point p1, Point p2) { return p1.y < p2.y; };
 };

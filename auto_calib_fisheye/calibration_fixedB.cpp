@@ -31,10 +31,9 @@ double during_wrap;
 string prefix, suffix;
 
 // 3度|1cm
-double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
+double CameraOptimization_sp_3_1(Optimizer& opt, string cameraType)
 {
-    std::chrono::_V2::steady_clock::time_point end_calib_ =
-        chrono::steady_clock::now();
+    std::chrono::_V2::steady_clock::time_point end_calib_ = chrono::steady_clock::now();
     ;
     double during_calib_ = 0;
     if (opt.coarse_flag)
@@ -52,27 +51,20 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
             opt.max_right_loss = opt.cur_right_loss =
                 opt.CostFunction(var, "right", opt.extrinsic_right);
             int iter_nums = 100000;
-            threads[0]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[1]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 0, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[2]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, 0, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[3]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 0, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[4]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, 0, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[5]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 0, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[6]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, 0, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[0] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[1] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 0, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[2] = thread(&Optimizer::random_search_params, &opt, iter_nums, 0, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[3] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 0, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[4] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, 0, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[5] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                0, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[6] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, 0,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         }
         else if (cameraType == "left")
         {
@@ -80,27 +72,20 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
             opt.max_left_loss = opt.cur_left_loss =
                 opt.CostFunction(var, "left", opt.extrinsic_left);
             int iter_nums = 100000;
-            threads[0]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[1]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 0, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[2]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, 0, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[3]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 0, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[4]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, 0, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[5]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 0, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[6]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, 0, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[0] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[1] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 0, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[2] = thread(&Optimizer::random_search_params, &opt, iter_nums, 0, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[3] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 0, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[4] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, 0, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[5] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                0, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[6] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, 0,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         }
         else if (cameraType == "front")
         {
@@ -108,45 +93,34 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
             opt.max_front_loss = opt.cur_front_loss =
                 opt.CostFunction(var, "front", opt.extrinsic_front);
             int iter_nums = 100000;
-            threads[0]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[1]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 0, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[2]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, 0, 3, -3, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[3]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 0, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[4]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, 0, 3, -3, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[5]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, -3, 0, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
-            threads[6]    = thread(&Optimizer::random_search_params, &opt,
-                                   iter_nums, -3, 3, -3, 3, 0, 3, -0.01, 0.01,
-                                   -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[0] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[1] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 0, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[2] = thread(&Optimizer::random_search_params, &opt, iter_nums, 0, 3, -3, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[3] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 0, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[4] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, 0, 3, -3,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[5] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, -3,
+                                0, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+            threads[6] = thread(&Optimizer::random_search_params, &opt, iter_nums, -3, 3, -3, 3, 0,
+                                3, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         }
         for (int i = 0; i < thread_num; i++)
         {
             threads[i].join();
         }
-        end_calib_ = chrono::steady_clock::now();
-        during_calib_ =
-            std::chrono::duration<double>(end_calib_ - start_calib).count();
+        end_calib_    = chrono::steady_clock::now();
+        during_calib_ = std::chrono::duration<double>(end_calib_ - start_calib).count();
         cout << "time:" << during_calib_ << endl;
         if (cameraType == "left")
         {
             opt.show("left", prefix + "/after_left_calib1.png");
-            cout << "luminorsity loss before pre opt:" << opt.max_left_loss
-                 << endl;
-            cout << "luminorsity loss after pre opt:" << opt.cur_left_loss
-                 << endl;
-            cout << "extrinsic after pre opt:" << endl
-                 << opt.extrinsic_left_opt << endl;
+            cout << "luminorsity loss before pre opt:" << opt.max_left_loss << endl;
+            cout << "luminorsity loss after pre opt:" << opt.cur_left_loss << endl;
+            cout << "extrinsic after pre opt:" << endl << opt.extrinsic_left_opt << endl;
             cout << "best search parameters:" << endl;
             for (auto e : opt.bestVal_[0])
                 cout << fixed << setprecision(6) << e << " ";
@@ -155,12 +129,9 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         else if (cameraType == "front")
         {
             opt.show("front", prefix + "/after_front_calib1.png");
-            cout << "luminorsity loss before pre opt:" << opt.max_front_loss
-                 << endl;
-            cout << "luminorsity loss after pre opt:" << opt.cur_front_loss
-                 << endl;
-            cout << "extrinsic after pre opt:" << endl
-                 << opt.extrinsic_front_opt << endl;
+            cout << "luminorsity loss before pre opt:" << opt.max_front_loss << endl;
+            cout << "luminorsity loss after pre opt:" << opt.cur_front_loss << endl;
+            cout << "extrinsic after pre opt:" << endl << opt.extrinsic_front_opt << endl;
             cout << "best search parameters:" << endl;
             for (auto e : opt.bestVal_[2])
                 cout << fixed << setprecision(6) << e << " ";
@@ -170,12 +141,9 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         else if (cameraType == "right")
         {
             opt.show("right", prefix + "/after_right_calib1.png");
-            cout << "luminorsity loss before pre opt:" << opt.max_right_loss
-                 << endl;
-            cout << "luminorsity loss after pre opt:" << opt.cur_right_loss
-                 << endl;
-            cout << "extrinsic after pre opt:" << endl
-                 << opt.extrinsic_right_opt << endl;
+            cout << "luminorsity loss before pre opt:" << opt.max_right_loss << endl;
+            cout << "luminorsity loss after pre opt:" << opt.cur_right_loss << endl;
+            cout << "extrinsic after pre opt:" << endl << opt.extrinsic_right_opt << endl;
             cout << "best search parameters:" << endl;
             for (auto e : opt.bestVal_[1])
                 cout << fixed << setprecision(6) << e << " ";
@@ -204,100 +172,82 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         vector<double> var(6, 0);
         cur_right_loss_ = opt.cur_right_loss =
             opt.CostFunction(var, "right", opt.extrinsic_right_opt);
-        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -1, 1, -1, 1, -1, 1, -0.005, 0.005,
-                             -0.005, 0.005, -0.005, 0.005, cameraType);
-        threads_[1] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.01,
-                             0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -1, 1, -1, 1,
+                             -1, 1, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
+        threads_[1] =
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         threads_[2] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[3] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[4] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[5] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
     }
     else if (cameraType == "left")
     {
         vector<double> var(6, 0);
-        cur_left_loss_ = opt.cur_left_loss =
-            opt.CostFunction(var, "left", opt.extrinsic_left_opt);
-        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -1, 1, -1, 1, -1, 1, -0.005, 0.005,
-                             -0.005, 0.005, -0.005, 0.005, cameraType);
-        threads_[1] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.01,
-                             0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+        cur_left_loss_ = opt.cur_left_loss = opt.CostFunction(var, "left", opt.extrinsic_left_opt);
+        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -1, 1, -1, 1,
+                             -1, 1, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
+        threads_[1] =
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         threads_[2] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[3] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[4] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[5] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
     }
     else if (cameraType == "front")
     {
         vector<double> var(6, 0);
         cur_front_loss_ = opt.cur_front_loss =
             opt.CostFunction(var, "front", opt.extrinsic_front_opt);
-        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -1, 1, -1, 1, -1, 1, -0.005, 0.005,
-                             -0.005, 0.005, -0.005, 0.005, cameraType);
-        threads_[1] = thread(&Optimizer::fine_random_search_params, &opt,
-                             iter_nums_, -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.01,
-                             0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
+        threads_[0] = thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -1, 1, -1, 1,
+                             -1, 1, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
+        threads_[1] =
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.01, 0.01, -0.01, 0.01, -0.01, 0.01, cameraType);
         threads_[2] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[3] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[4] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
         threads_[5] =
-            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_,
-                   -0.5, 0.5, -0.5, 0.5, -0.5, 0.5, -0.005, 0.005, -0.005,
-                   0.005, -0.005, 0.005, cameraType);
+            thread(&Optimizer::fine_random_search_params, &opt, iter_nums_, -0.5, 0.5, -0.5, 0.5,
+                   -0.5, 0.5, -0.005, 0.005, -0.005, 0.005, -0.005, 0.005, cameraType);
     }
     for (int i = 0; i < thread_num_; i++)
     {
         threads_[i].join();
     }
-    auto end_calib__ = chrono::steady_clock::now();
-    double during_calib__ =
-        std::chrono::duration<double>(end_calib__ - end_calib_).count();
+    auto end_calib__      = chrono::steady_clock::now();
+    double during_calib__ = std::chrono::duration<double>(end_calib__ - end_calib_).count();
     cout << "time:" << during_calib__ << endl;
     if (cameraType == "left")
     {
         opt.show("left", prefix + "/after_left_calib2.png");
         cout << "luminorsity loss before 2nd opt:" << cur_left_loss_ << endl;
         cout << "luminorsity loss after 2nd opt:" << opt.cur_left_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_left_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_left_opt << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[0])
             cout << fixed << setprecision(6) << e << " ";
@@ -308,8 +258,7 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         opt.show("front", prefix + "/after_front_calib2.png");
         cout << "luminorsity loss before 2nd opt:" << cur_front_loss_ << endl;
         cout << "luminorsity loss after 2nd opt:" << opt.cur_front_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_front_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_front_opt << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[2])
             cout << fixed << setprecision(6) << e << " ";
@@ -321,8 +270,7 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         opt.show("right", prefix + "/after_right_calib2.png");
         cout << "luminorsity loss before 2nd opt:" << cur_right_loss_ << endl;
         cout << "luminorsity loss after 2nd opt:" << opt.cur_right_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_right_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_right_opt << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[1])
             cout << fixed << setprecision(6) << e << " ";
@@ -344,35 +292,28 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         cur_right_loss__ = opt.cur_right_loss =
             opt.CostFunction(var, "right", opt.extrinsic_right_opt);
         threads__[0] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.002, 0.002, -0.002,
-                   0.002, -0.002, 0.002, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.002, 0.002, -0.002, 0.002, -0.002, 0.002, cameraType);
         threads__[1] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
         threads__[2] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
     }
     else if (cameraType == "left")
     {
         vector<double> var(6, 0);
-        cur_left_loss__ = opt.cur_left_loss =
-            opt.CostFunction(var, "left", opt.extrinsic_left_opt);
+        cur_left_loss__ = opt.cur_left_loss = opt.CostFunction(var, "left", opt.extrinsic_left_opt);
         threads__[0] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.002, 0.002, -0.002,
-                   0.002, -0.002, 0.002, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.002, 0.002, -0.002, 0.002, -0.002, 0.002, cameraType);
         threads__[1] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
         threads__[2] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
     }
     else if (cameraType == "front")
     {
@@ -380,37 +321,30 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         cur_front_loss__ = opt.cur_front_loss =
             opt.CostFunction(var, "front", opt.extrinsic_front_opt);
         threads__[0] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.002, 0.002, -0.002,
-                   0.002, -0.002, 0.002, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.002, 0.002, -0.002, 0.002, -0.002, 0.002, cameraType);
         threads__[1] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
         threads__[2] =
-            thread(&Optimizer::best_random_search_params, &opt, iter_nums__,
-                   -0.1, 0.1, -0.1, 0.1, -0.1, 0.1, -0.001, 0.001, -0.001,
-                   0.001, -0.001, 0.001, cameraType);
+            thread(&Optimizer::best_random_search_params, &opt, iter_nums__, -0.1, 0.1, -0.1, 0.1,
+                   -0.1, 0.1, -0.001, 0.001, -0.001, 0.001, -0.001, 0.001, cameraType);
     }
     for (int i = 0; i < thread_num__; i++)
     {
         threads__[i].join();
     }
-    auto end_calib___ = chrono::steady_clock::now();
-    double during_calib___ =
-        std::chrono::duration<double>(end_calib___ - end_calib__).count();
+    auto end_calib___      = chrono::steady_clock::now();
+    double during_calib___ = std::chrono::duration<double>(end_calib___ - end_calib__).count();
     cout << "time:" << during_calib___ << endl;
     if (cameraType == "left")
     {
         opt.show("left", prefix + "/after_left_calib3.png");
         cout << "luminorsity loss before 3rd opt:" << cur_left_loss__ << endl;
         cout << "luminorsity loss after 3rd opt:" << opt.cur_left_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_left_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_left_opt << endl;
         cout << "eular:" << endl
-             << TransformUtil::Rotation2Eul(
-                    opt.extrinsic_left_opt.block(0, 0, 3, 3))
-             << endl;
+             << TransformUtil::Rotation2Eul(opt.extrinsic_left_opt.block(0, 0, 3, 3)) << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[0])
             cout << fixed << setprecision(6) << e << " ";
@@ -421,12 +355,9 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         opt.show("front", prefix + "/after_front_calib3.png");
         cout << "luminorsity loss before 3rd opt:" << cur_front_loss__ << endl;
         cout << "luminorsity loss after 3rd opt:" << opt.cur_front_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_front_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_front_opt << endl;
         cout << "eular:" << endl
-             << TransformUtil::Rotation2Eul(
-                    opt.extrinsic_front_opt.block(0, 0, 3, 3))
-             << endl;
+             << TransformUtil::Rotation2Eul(opt.extrinsic_front_opt.block(0, 0, 3, 3)) << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[2])
             cout << fixed << setprecision(6) << e << " ";
@@ -437,20 +368,17 @@ double CameraOptimization_sp_3_1(Optimizer &opt, string cameraType)
         opt.show("right", prefix + "/after_right_calib3.png");
         cout << "luminorsity loss before 3rd opt:" << cur_right_loss__ << endl;
         cout << "luminorsity loss after 3rd opt:" << opt.cur_right_loss << endl;
-        cout << "extrinsic after opt:" << endl
-             << opt.extrinsic_right_opt << endl;
+        cout << "extrinsic after opt:" << endl << opt.extrinsic_right_opt << endl;
         cout << "eular:" << endl
-             << TransformUtil::Rotation2Eul(
-                    opt.extrinsic_right_opt.block(0, 0, 3, 3))
-             << endl;
+             << TransformUtil::Rotation2Eul(opt.extrinsic_right_opt.block(0, 0, 3, 3)) << endl;
         cout << "best search parameters:" << endl;
         for (auto e : opt.bestVal_[1])
             cout << fixed << setprecision(6) << e << " ";
         // imwrite(opt.prefix+"/GR_opt.png",opt.imgr_bev_rgb);
     }
     cout << endl
-         << cameraType << " calibration time: "
-         << during_calib_ + during_calib__ + during_calib___ << "s" << endl;
+         << cameraType << " calibration time: " << during_calib_ + during_calib__ + during_calib___
+         << "s" << endl;
     return during_calib_ + during_calib__ + during_calib___;
 }
 
@@ -512,23 +440,22 @@ int main(int argc, char** argv)
     string fixed = "back";
 
     // initilize the optimizer
-    Optimizer opt(argv[1], &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows, bev_cols,
-                  fixed, coarse_search_flag, data_set, flag_add_disturbance,
-                  prefix, solution_model_);
+    Optimizer opt(argv[1], &imgf, &imgl, &imgb, &imgr, camera_model, bev_rows, bev_cols, fixed,
+                  coarse_search_flag, data_set, flag_add_disturbance, prefix, solution_model_);
 
     // bev images before optimization
-    Mat GF = opt.project_on_ground(
-        imgf, opt.extrinsic_front, opt.intrinsic_front,
-        opt.distortion_params_front, opt.KG, opt.brows, opt.bcols, opt.hf);
-    Mat GB = opt.project_on_ground(
-        imgb, opt.extrinsic_behind, opt.intrinsic_behind,
-        opt.distortion_params_behind, opt.KG, opt.brows, opt.bcols, opt.hb);
-    Mat GL = opt.project_on_ground(imgl, opt.extrinsic_left, opt.intrinsic_left,
-                                   opt.distortion_params_left, opt.KG,
-                                   opt.brows, opt.bcols, opt.hl);
-    Mat GR = opt.project_on_ground(
-        imgr, opt.extrinsic_right, opt.intrinsic_right,
-        opt.distortion_params_right, opt.KG, opt.brows, opt.bcols, opt.hr);
+    Mat GF =
+        opt.project_on_ground(imgf, opt.extrinsic_front, opt.intrinsic_front,
+                              opt.distortion_params_front, opt.KG, opt.brows, opt.bcols, opt.hf);
+    Mat GB =
+        opt.project_on_ground(imgb, opt.extrinsic_behind, opt.intrinsic_behind,
+                              opt.distortion_params_behind, opt.KG, opt.brows, opt.bcols, opt.hb);
+    Mat GL =
+        opt.project_on_ground(imgl, opt.extrinsic_left, opt.intrinsic_left,
+                              opt.distortion_params_left, opt.KG, opt.brows, opt.bcols, opt.hl);
+    Mat GR =
+        opt.project_on_ground(imgr, opt.extrinsic_right, opt.intrinsic_right,
+                              opt.distortion_params_right, opt.KG, opt.brows, opt.bcols, opt.hr);
 
     // imshow("GF",GF);
     // waitKey(0);
@@ -568,8 +495,7 @@ int main(int argc, char** argv)
     // back left field texture extraction
     vector<double> size  = {opt.sizef, opt.sizel, opt.sizeb, opt.sizer};
     int exposure_flag_bl = 1;  // if add exposure solution
-    extractor ext1(GB, GL, add_semantic_segmentation_back, exposure_flag_bl,
-                   size);
+    extractor ext1(GB, GL, add_semantic_segmentation_back, exposure_flag_bl, size);
     if (add_semantic_segmentation_back)
     {
         Mat mask_bl = imread(prefix + "/mask/road_mask_back.png");
@@ -577,8 +503,8 @@ int main(int argc, char** argv)
     }
     ext1.Binarization();
     ext1.findcontours();
-    opt.bl_pixels_texture = ext1.extrac_textures_and_save(
-        prefix + "/texture_bl.png", prefix + "/bl.csv");
+    opt.bl_pixels_texture =
+        ext1.extrac_textures_and_save(prefix + "/texture_bl.png", prefix + "/bl.csv");
     if (ext1.exposure_flag && ext1.ncoef > 0.5)
     {
         opt.ncoef_bl = ext1.ncoef;
@@ -603,8 +529,7 @@ int main(int argc, char** argv)
 
     // back right field texture extraction
     int exposure_flag_br = 1;  // if add exposure solution
-    extractor ext2(GB, GR, add_semantic_segmentation_back, exposure_flag_br,
-                   size);
+    extractor ext2(GB, GR, add_semantic_segmentation_back, exposure_flag_br, size);
     if (add_semantic_segmentation_back)
     {
         Mat mask_br = imread(prefix + "/mask/road_mask_back.png");
@@ -612,8 +537,8 @@ int main(int argc, char** argv)
     }
     ext2.Binarization();
     ext2.findcontours();
-    opt.br_pixels_texture = ext2.extrac_textures_and_save(
-        prefix + "/texture_br.png", prefix + "/br.csv");
+    opt.br_pixels_texture =
+        ext2.extrac_textures_and_save(prefix + "/texture_br.png", prefix + "/br.csv");
     if (ext2.exposure_flag && ext2.ncoef > 0.5)
     {
         opt.ncoef_br = ext2.ncoef;
@@ -648,8 +573,7 @@ int main(int argc, char** argv)
 
     // front left texture extraction
     int exposure_flag_fl = 1;  // if add exposure solution
-    extractor ext3(opt.imgl_bev_rgb, GF, add_semantic_segmentation_left,
-                   exposure_flag_fl, size);
+    extractor ext3(opt.imgl_bev_rgb, GF, add_semantic_segmentation_left, exposure_flag_fl, size);
     if (add_semantic_segmentation_left)
     {
         Mat mask_fl = imread(prefix + "/mask/road_mask_left.png");
@@ -657,8 +581,8 @@ int main(int argc, char** argv)
     }
     ext3.Binarization();
     ext3.findcontours();
-    opt.fl_pixels_texture = ext3.extrac_textures_and_save(
-        prefix + "/texture_fl.png", prefix + "/fl.csv");
+    opt.fl_pixels_texture =
+        ext3.extrac_textures_and_save(prefix + "/texture_fl.png", prefix + "/fl.csv");
     if (ext3.exposure_flag && ext3.ncoef > 0.5)
     {
         opt.ncoef_fl = ext3.ncoef;
@@ -683,8 +607,7 @@ int main(int argc, char** argv)
 
     // front right field texture extraction
     int exposure_flag_fr = 1;  // if add exposure solution
-    extractor ext4(opt.imgr_bev_rgb, GF, add_semantic_segmentation_right,
-                   exposure_flag_fr, size);
+    extractor ext4(opt.imgr_bev_rgb, GF, add_semantic_segmentation_right, exposure_flag_fr, size);
     if (add_semantic_segmentation_right)
     {
         Mat mask_fr = imread(prefix + "/mask/road_mask_right.png");
@@ -692,8 +615,8 @@ int main(int argc, char** argv)
     }
     ext4.Binarization();
     ext4.findcontours();
-    opt.fr_pixels_texture = ext4.extrac_textures_and_save(
-        prefix + "/texture_fr.png", prefix + "/fr.csv");
+    opt.fr_pixels_texture =
+        ext4.extrac_textures_and_save(prefix + "/texture_fr.png", prefix + "/fr.csv");
     if (ext4.exposure_flag && ext4.ncoef > 0.5)
     {
         opt.ncoef_fr = ext4.ncoef;
@@ -723,8 +646,7 @@ int main(int argc, char** argv)
     cout << "************************online calibration "
             "finished!!!**************************"
          << endl;
-    cout << "total calibration time:" << during1 + during2 + during3 << "s"
-         << endl;
+    cout << "total calibration time:" << during1 + during2 + during3 << "s" << endl;
 
     opt.SaveOptResult(prefix + "/after_all_calib.png");
 }

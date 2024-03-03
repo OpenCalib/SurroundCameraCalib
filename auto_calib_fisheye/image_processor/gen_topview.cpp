@@ -51,10 +51,9 @@ int main(int argc, char** argv)
 
     using namespace perception::imgproc;
     auto config = std::make_shared<PerceptionConfig>();
-    util::LoadProtoFromASCIIFile(
-        "/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/config/"
-        "perception_config.textproto",
-        config.get());
+    util::LoadProtoFromASCIIFile("/home/kiennt63/dev/surround_cam_calib/auto_calib_fisheye/config/"
+                                 "perception_config.textproto",
+                                 config.get());
     auto imgprocContext = std::make_unique<ImageProcessorContext>(
         std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
         std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
