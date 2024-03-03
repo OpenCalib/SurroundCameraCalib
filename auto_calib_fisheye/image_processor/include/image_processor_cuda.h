@@ -18,7 +18,7 @@ public:
     ImageProcessorCuda(const ImageProcessorConfig& config);
     ~ImageProcessorCuda();
 
-    bool init(const UVLists& uvlists) override;
+    bool init() override;
     void createTopViewImage(const cv::Mat& fisheye0, const cv::Mat& fisheye1,
                             const cv::Mat& fisheye2, const cv::Mat& fisheye3,
                             cv::Mat& topImg) override;

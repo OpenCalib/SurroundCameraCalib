@@ -30,3 +30,7 @@ target_link_libraries(image_processor PUBLIC
     ${LIBRARIES}
     -L/opt/mpc/3rdparty/protobuf/lib/x64_linux protobuf protobuf-lite protoc
 )
+
+add_executable(gen_topview_after gen_topview.cpp)
+
+target_link_libraries(gen_topview_after image_processor ${OpenCV_LIBS})

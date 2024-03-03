@@ -34,7 +34,6 @@ void getMatrix(Eigen::Matrix4d& matrix, std::vector<double>& rvec,
     matrix(3, 2) = 0;
     matrix(3, 3) = 1;
     matrix       = matrix * rot90;
-    printf("test\n");
 }
 
 void load_extrinsics(const std::string& extrinsics_dir,

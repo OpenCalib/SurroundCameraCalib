@@ -24,7 +24,7 @@ public:
     ImageProcessor(const ImageProcessorConfig& config);
     ~ImageProcessor();
 
-    bool init(const UVLists& uvLists) override;
+    bool init() override;
     void createTopViewImage(const cv::Mat& in_img0, const cv::Mat& in_img1, const cv::Mat& in_img2,
                             const cv::Mat& in_img3, cv::Mat& out_img) override;
     void releaseResource();

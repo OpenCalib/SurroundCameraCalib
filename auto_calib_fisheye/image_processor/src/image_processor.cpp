@@ -36,7 +36,7 @@ ImageProcessor::~ImageProcessor()
     releaseResource();
 }
 
-bool ImageProcessor::init(const UVLists& uvLists)
+bool ImageProcessor::init()
 {
     initTopViewStitching();
 

@@ -9,3 +9,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+auto_calib_fisheye/data
+auto_calib_fisheye/.clangd

@@ -24,7 +24,7 @@ public:
     SegmentImageProcessor(const ImageProcessorConfig& config);
     ~SegmentImageProcessor();
 
-    bool init(const UVLists& uvLists) override;
+    bool init() override;
     void createTopViewImage(const cv::Mat& inImg0, const cv::Mat& inImg1, const cv::Mat& inImg2,
                             const cv::Mat& inImg3, cv::Mat& outImg) override;
     void releaseResource();

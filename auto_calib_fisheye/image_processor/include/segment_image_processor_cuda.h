@@ -18,7 +18,7 @@ public:
     SegmentImageProcessorCuda(const ImageProcessorConfig& config);
     ~SegmentImageProcessorCuda();
 
-    bool init(const UVLists& uvLists) override;
+    bool init() override;
     void createTopViewImage(const cv::Mat& fisheye0, const cv::Mat& fisheye1,
                             const cv::Mat& fisheye2, const cv::Mat& fisheye3,
                             cv::Mat& topImg) override;

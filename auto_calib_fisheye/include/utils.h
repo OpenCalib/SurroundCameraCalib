@@ -9,9 +9,9 @@
 #define SVM_AUTORC_UTILS_H
 
 #include <Eigen/Dense>
+#include "defines.h"
 #include "optimizer.h"
 #include "transform_util.h"
-#include "defines.h"
 
 namespace util {
 
