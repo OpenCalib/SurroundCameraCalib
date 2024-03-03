@@ -122,7 +122,29 @@ bool ImageProcessorCuda::init()
     {
         // Load and copy maps and masks to device memory
         mapPtr[id]  = loadAndCopyMap(calibDir + "topview_rgb/map" + std::to_string(id) + ".txt",
-                                    MAP_COLS, MAP_ROWS);
+                                     MAP_COLS, MAP_ROWS);
+        maskPtr[id] = loadAndCopyMask(calibDir + "topview_rgb/mask" + std::to_string(id) + ".png");
+
+        // Allocate pinned memory for fisheye images
+        fisheyePtr[id] = allocateFisheye();
+
+        // Allocate device memory to mid-topviews
+        midtopPtr[id] = allocateMidtopview(TOP_ROWS * TOP_COLS * TOP_CHANNELS);
+    }
+
+    return true;
+}
+
+bool ImageProcessorCuda::init(const UVLists& uvLists)
+{
+    for (int id = 0; id < NUM_CAMS; id++)
+    {
+        // Load and copy maps and masks to device memory
+        auto& map         = uvLists[id];
+        const int mapSize = map.size() * sizeof(short);
+        cudaMalloc((void**)&mapPtr[id], mapSize);
+        cudaMemcpy(mapPtr[id], map.data(), mapSize, cudaMemcpyHostToDevice);
+
         maskPtr[id] = loadAndCopyMask(calibDir + "topview_rgb/mask" + std::to_string(id) + ".png");
 
         // Allocate pinned memory for fisheye images

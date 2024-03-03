@@ -496,18 +496,11 @@ int main(int argc, char** argv)
                     uvLists[i], output + "/map" + std::to_string((int)camId) + ".txt", false);
     }
 
-    auto imgprocContext = std::make_unique<ImageProcessorContext>(
-        std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
-        std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
-
-    if (!imgprocContext->init())
-    {
-        LOG_ERROR("Failed to initialize image processor context!");
-        throw std::runtime_error("Cannot init attributes");
-    }
-
+    auto topviewGenerator = std::make_unique<ImageProcessorCuda>(config->imgproc_config());
+    topviewGenerator->init(uvLists);
     cv::Mat imgTop;
-    imgprocContext->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
+    topviewGenerator->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
+
     cv::imwrite(output + "/topview_before.png", imgTop);
 
     // bev images before optimization
@@ -550,7 +543,7 @@ int main(int argc, char** argv)
 
     // front left field texture extraction
     vector<double> size  = {opt.tailSize[CamID::F], opt.tailSize[CamID::L], opt.tailSize[CamID::B],
-                           opt.tailSize[CamID::R]};
+                            opt.tailSize[CamID::R]};
     int exposure_flag_fl = 1;  // if add exposure solution
     extractor ext1(GF, GL, add_semantic_segmentation_front, exposure_flag_fl, size);
     if (add_semantic_segmentation_front)
@@ -786,13 +779,8 @@ int main(int argc, char** argv)
                     uvLists[i], output + "/map" + std::to_string((int)camId) + ".txt", false);
     }
 
-    if (!imgprocContext->init())
-    {
-        LOG_ERROR("Failed to initialize image processor context!");
-        throw std::runtime_error("Cannot init attributes");
-    }
-
-    imgprocContext->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
+    topviewGenerator->init(uvLists);
+    topviewGenerator->createTopViewImage(imgl, imgf, imgb, imgr, imgTop);
 
     LOG_INFO("Writing image");
     cv::imwrite(output + "/topview_after.png", imgTop);

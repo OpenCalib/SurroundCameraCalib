@@ -8,7 +8,10 @@
 #define PARKING_PERCEPTION_IMAGE_PROCESSOR_IMAGE_PROCESSOR_CUDA_H_
 
 #include "cuda_utils.h"
+#include "defines.h"
 #include "i_image_processor.h"
+
+using UVLists = std::array<std::vector<short>, CamID::NUM_CAM>;
 
 namespace perception {
 namespace imgproc {
@@ -19,6 +22,7 @@ public:
     ~ImageProcessorCuda();
 
     bool init() override;
+    bool init(const UVLists& uvLists);
     void createTopViewImage(const cv::Mat& fisheye0, const cv::Mat& fisheye1,
                             const cv::Mat& fisheye2, const cv::Mat& fisheye3,
                             cv::Mat& topImg) override;
