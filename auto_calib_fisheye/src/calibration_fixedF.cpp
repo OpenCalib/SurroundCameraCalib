@@ -575,7 +575,7 @@ int main(int argc, char** argv)
         std::make_unique<ImageProcessorCuda>(config->imgproc_config()),
         std::make_unique<SegmentImageProcessorCuda>(config->imgproc_config()));
 
-    if (!imgprocContext->init(uvLists))
+    if (!imgprocContext->init())
     {
         LOG_ERROR("Failed to initialize image processor context!");
         throw std::runtime_error("Cannot init attributes");
@@ -883,7 +883,7 @@ int main(int argc, char** argv)
                     false);
     }
 
-    if (!imgprocContext->init(uvLists))
+    if (!imgprocContext->init())
     {
         LOG_ERROR("Failed to initialize image processor context!");
         throw std::runtime_error("Cannot init attributes");
